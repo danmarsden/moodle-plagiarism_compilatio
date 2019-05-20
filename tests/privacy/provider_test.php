@@ -18,7 +18,6 @@ use core_privacy\local\metadata\collection;
 use plagiarism_compilatio\privacy\provider;
 use core_privacy\local\request\writer;
 use core_privacy\local\request\userlist;
-use core_privacy\local\request\approved_userlist;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -96,7 +95,7 @@ class plagiarism_compilatio_privacy_provider_testcase extends \core_privacy\test
     }
 
     /**
-     * Test fonction get_contexts_for_userid
+     * Test fonction _get_contexts_for_userid
      */
     public function test_get_contexts_for_userid() {
 
@@ -113,42 +112,8 @@ class plagiarism_compilatio_privacy_provider_testcase extends \core_privacy\test
         }
 
         // On vérifie que la liste des contextes retournée est bien égale à 5
-        $contextlist = provider::get_contexts_for_userid($student->id);
-
+        $contextlist = provider::_get_contexts_for_userid($student->id);
         $this->assertCount(5, $contextlist);
-    }
-
-    /**
-     * Test fonction get_users_in_context
-     */
-    public function test_get_users_in_context() {
-
-        $this->resetAfterTest();
-
-        // On crée trois étudiants
-        $student1 = $this->getDataGenerator()->create_user();
-        $student2 = $this->getDataGenerator()->create_user();
-        $student3 = $this->getDataGenerator()->create_user();
-
-        // On crée un module de cours et un contexte
-        $coursemodule = $this->create_partial_coursemodule();
-        $context = $this->create_partial_context($coursemodule->id);
-
-        // On crée dix plagiarismfiles, cinq pour l'étudiant 1 et cinq autres pour l'étudiant 2
-        for($i = 0; $i < 5; $i++) {
-            $this->create_partial_plagiarismfile($coursemodule->id, $student1->id);
-            $this->create_partial_plagiarismfile($coursemodule->id, $student2->id);
-        }
-
-        // On crée une userlist vide (sans utilisateurs, mais avec un contexte)
-        $context = context_module::instance($coursemodule->id);
-        $userlistEmpty = new userlist($context, 'plagiarism_compilatio');
-
-        // On récupère la liste des utilisateurs qui ont des données dans le contexte, et on regarde si l'on a bien les IDs des étudiants 1 et 2
-        $userlist = provider::get_users_in_context($userlistEmpty);
-        $userids = $userlist->get_userids();
-        
-        $this->assertEquals(array($student1->id, $student2->id), $userids);
     }
 
     /**
@@ -244,17 +209,9 @@ class plagiarism_compilatio_privacy_provider_testcase extends \core_privacy\test
         $nbPlagiarismFile = $DB->count_records('plagiarism_compilatio_files');
         $this->assertEquals(10, $nbPlagiarismFile);
 
-        // On supprime les fichiers dans le premier contexte
+        // On supprime les fichiers de l'utilisateur
         $context1 = context_module::instance($coursemodule1->id);
         provider::_delete_plagiarism_for_user($student->id, $context1);
-
-        // On vérifie qu'il reste bien cinq plagiarismfiles dans la table plagiarism_compilatio_files
-        $nbPlagiarismFile = $DB->count_records('plagiarism_compilatio_files');
-        $this->assertEquals(5, $nbPlagiarismFile);
-
-        // On supprime les fichiers dans le second contexte
-        $context2 = context_module::instance($coursemodule2->id);
-        provider::_delete_plagiarism_for_user($student->id, $context2);
 
         // On vérifie qu'on a bien vidé la table plagiarism_compilatio_files
         $nbPlagiarismFile = $DB->count_records('plagiarism_compilatio_files');
@@ -262,9 +219,9 @@ class plagiarism_compilatio_privacy_provider_testcase extends \core_privacy\test
     }
 
     /**
-     * Test fonction delete_data_for_users
+     * Test fonction delete_plagiarism_for_users
      */
-    public function test_delete_data_for_users() {
+    public function test_delete_plagiarism_for_users() {
 
         $this->resetAfterTest();
         global $DB;
@@ -293,139 +250,19 @@ class plagiarism_compilatio_privacy_provider_testcase extends \core_privacy\test
         $nbPlagiarismFile = $DB->count_records('plagiarism_compilatio_files');
         $this->assertEquals(15, $nbPlagiarismFile);
 
-        // On crée la liste approved_userlist avec les étudiants 1 et 2
-        $context = context_module::instance($coursemodule->id);
-        $userlist = new approved_userlist($context, 'plagiarism_compilatio', array($student1->id, $student2->id));
+        // On crée la liste d'IDs avec les étudiants 1 et 2
+        $userids = array($student1->id, $student2->id);
 
         // On supprime les plagiarismfiles pour ces deux étudiants
-        provider::delete_data_for_users($userlist);
+        $context = context_module::instance($coursemodule->id);
+        provider::delete_plagiarism_for_users($userids, $context);
 
         // On vérifie qu'il ne reste plus que cinq plagiarismfiles dans la table plagiarism_compilatio_files
         $nbPlagiarismFile = $DB->count_records('plagiarism_compilatio_files');
         $this->assertEquals(5, $nbPlagiarismFile);
     }
 
-    /**
-     * Fonction de testouille
-     */
-    public function testouille() {
-
-        $this->resetAfterTest();
-        global $DB;
-
-        global $CFG;
-        require_once($CFG->dirroot . '/plagiarism/compilatio/api.class.php');
-        require_once($CFG->dirroot . '/plagiarism/compilatio/lib.php');
-
-        $compilatio = new compilatioservice('646022b3de50939edccc46f9009924651022036a', 'https://beta.compilatio.net');
-
-        /*
-        // CELA FONCTIONNE !!!! -- mais pas "en vrai"
-        #region
-        $sql = "SELECT *
-                FROM mdl_plagiarism_compilatio_files
-                WHERE userid = 9";
-
-        $compids = $DB->get_records_sql($sql);
-
-        var_dump($compids);
-
-        foreach($compids as $compid) {
-            //var_dump($compilatio->get_doc($compid));
-            var_dump($compid->externalid);
-            //$compilatio->del_doc($compid->externalid);
-        }
-        #endregion
-        */
-        
-
-        
-        /*
-        // CELA FONCTIONNE !!!! -- mais pas "en vrai"
-        #region
-        $nbPlagiarismFile = $DB->count_records('plagiarism_compilatio_files');
-        $this->assertEquals(0, $nbPlagiarismFile);
-
-        $student = $this->getDataGenerator()->create_user();
-        $coursemodule = $this->create_partial_coursemodule();
-        $context = $this->create_partial_context($coursemodule->id);
-        for($i = 0; $i < 5; $i++) {
-            $this->create_partial_plagiarismfile($coursemodule->id, $student->id);
-        }
-
-        $nbPlagiarismFile = $DB->count_records('plagiarism_compilatio_files');
-        $this->assertEquals(5, $nbPlagiarismFile);
-
-        $sql = "SELECT *
-                FROM {plagiarism_compilatio_files}
-                WHERE userid = ?";
-        $docs = $DB->get_records_sql($sql, array($student->id));
-
-        foreach($docs as $doc) {
-            $DB->delete_records('plagiarism_compilatio_files', array('id' => $doc->id));
-        }
-
-        $nbPlagiarismFile = $DB->count_records('plagiarism_compilatio_files');
-        $this->assertEquals(0, $nbPlagiarismFile);
-        #endregion
-        */
-
-        /*
-        // CELA FONCTIONNE !!!! -- mais pas "en vrai"
-        $student = $this->getDataGenerator()->create_user();
-        $coursemodule = $this->create_partial_coursemodule();
-        $context = $this->create_partial_context($coursemodule->id);
-        for($i = 0; $i < 5; $i++) {
-            $this->create_partial_plagiarismfile($coursemodule->id, $student->id);
-        }
-        
-        $sql = "SELECT *
-                FROM {plagiarism_compilatio_files}
-                WHERE userid = ?";
-        $docs = $DB->get_records_sql($sql, array($student->id));
-
-        foreach($docs as $doc) {
-            echo "\n-------- AVANT MODFIFICATION --------\n";
-            var_dump($doc->errorresponse);
-            $DB->set_field('plagiarism_compilatio_files', 'errorresponse', "J'ai réussi à écrire quelque chose pour ce document. CQFD : j'arrive bien à accéder au fichier, donc pourquoi la suppression ne fonctionne pas ????????", array("id" => $doc->id));
-            //$doc->errorresponse = "J'ai réussi à écrire quelque chose pour ce document. CQFD : j'arrive bien à accéder au fichier, donc pourquoi la suppression ne fonctionne pas ????????";
-            //$DB->update_record('plagiarism_compilatio_files', $doc);
-        }
-
-        $docs = $DB->get_records_sql($sql, array($student->id));
-
-        foreach($docs as $doc) {
-            echo "\n-------- APRES MODIFICATION --------\n";
-            var_dump($doc->errorresponse);
-        }
-        */
-
-        $student = $this->getDataGenerator()->create_user();
-        $coursemodule = $this->create_partial_coursemodule();
-        $context = $this->create_partial_context($coursemodule->id);
-        for($i = 0; $i < 5; $i++) {
-            $this->create_partial_plagiarismfile($coursemodule->id, $student->id);
-        }
-        $sql = "SELECT *
-                FROM {plagiarism_compilatio_files}
-                WHERE userid = ?";
-        $docs = $DB->get_records_sql($sql, array($student->id));
-
-        $texte = "Description des docs : \n";
-        foreach($docs as $doc) {
-            $texte .= $this->getTexte($doc) . "\n";
-        }
-        var_dump($texte);
-    }
-    public function getTexte($doc) {
-        $texte = "";
-        foreach((array)$doc as $k => $v) {
-            $texte .= $k . " => " . $v . "\n";
-        }
-        return $texte;
-    }
-
-#region Fonctions create_partial...
+    #region Fonctions create_partial...
 
     /**
      * Fonction qui insère seulement quelques champs dans la table course_modules
@@ -475,7 +312,7 @@ class plagiarism_compilatio_privacy_provider_testcase extends \core_privacy\test
         return $plagiarismfile;
     }
 
-#endregion
+    #endregion
 
 }
 

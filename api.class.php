@@ -151,7 +151,6 @@ class compilatioservice {
             $documentProperties->idParent = $document->id;
             $documentProperties->wordCount = $document->words_count;
             $documentStatus = new \stdClass();
-            //$analysisBSON = (array) $document->analyses;
             if(isset($document->analyses)) {
                 $analysisBSON = (array) $document->analyses;
             }
