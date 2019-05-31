@@ -259,7 +259,8 @@ $string['restart_failed_analysis'] = 'Restart interrupted analysis';
 $string['restart_failed_analysis_title'] = 'Restart interrupted analysis :';
 // Max attempt reached.
 $string['max_attempts_reach_files'] = 'Analysis has been interrupted for the following files. Analyses were sent too many times, you cannot restart them anymore :';
-// Privacy (GDPR)
+
+// Privacy (GDPR).
 $string['privacy:metadata:core_files'] = 'Files attached to submissions or created from online text submissions';
 $string['privacy:metadata:core_plagiarism'] = 'This plugin is called by Moodle plagiarism subsystem';
 
@@ -287,7 +288,7 @@ $string['privacy:metadata:external_compilatio_document:upload_date'] = 'The time
 $string['privacy:metadata:external_compilatio_document:id'] = 'The submission\'s ID stored in the Compilatio database';
 $string['privacy:metadata:external_compilatio_document:indexed'] = 'The submission\'s indexing state (if the submission can be used to detect similarities with other documents)';
 
-$string['privacy:metadata:external_compilatio_report'] = 'Informations about the reports in Compilatio database';
+$string['privacy:metadata:external_compilatio_report'] = 'Informations about the reports in Compilatio database (only if the document has been analyzed)';
 $string['privacy:metadata:external_compilatio_report:id'] = 'The Compilatio report\'s ID';
 $string['privacy:metadata:external_compilatio_report:doc_id'] = 'The Compilatio submission\'s ID which was analyzed';
 $string['privacy:metadata:external_compilatio_report:user_id'] = 'The Compilatio user\'s ID who submitted the file - beware, this user is the one linked to the Compilatio API key of the Moodle platform (so it\'s usually the administrator of the platform)';
@@ -295,3 +296,9 @@ $string['privacy:metadata:external_compilatio_report:start'] = 'The timestamp wh
 $string['privacy:metadata:external_compilatio_report:end'] = 'The timestamp when the analysis ended';
 $string['privacy:metadata:external_compilatio_report:state'] = 'The submission\'s state (Analyzed, In queue, Timeout...)';
 $string['privacy:metadata:external_compilatio_report:plagiarism_percent'] = 'The submission\'s similarity score';
+
+$string['owner_file'] = 'GDPR and document ownership';
+$string['owner_file_school'] = 'The school owns the documents';
+$string['owner_file_school_details'] = 'When a student request to delete all his data, the documents and reports will be stored and available for future comparison with other documents. At the end of the contract with Compilatio, all your school\'s personnal data, including analyzed documents, are deleted within the contractual deadlines.';
+$string['owner_file_student'] = 'The student is the only owner of his document';
+$string['owner_file_student_details'] = 'When a student request to delete all his data, his documents and reports will be deleted from Moodle and the Compilatio document database. Documents will no longer be available for comparison with other documents.';

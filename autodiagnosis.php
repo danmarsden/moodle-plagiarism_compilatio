@@ -56,8 +56,7 @@ if (isset($plagiarismsettings["compilatio_use"])) {
 $connectionstatus = ws_helper::test_connection();
 if ($connectionstatus) {
     $connectionsuccess = true;
-}
-else {
+} else {
     $connectionsuccess = false;
 }
 
@@ -189,6 +188,3 @@ foreach ($alerts as $alert) {
 
 echo $OUTPUT->box_end();
 echo $OUTPUT->footer();
-
-
-

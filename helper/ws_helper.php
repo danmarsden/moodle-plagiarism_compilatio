@@ -83,9 +83,9 @@ class ws_helper
 
         $compilatio = self::get_ws();
         $filetypes = $compilatio->get_allowed_file_types();
-        
+
         $filtered = array();
- 
+
         // Check and remove duplicates filetypes.
         foreach ($filetypes as $ft) {
 
@@ -104,7 +104,7 @@ class ws_helper
         usort($filtered, function ($a, $b) {
             return strcmp($a["type"], $b["type"]);
         });
-        
+
         return $filtered;
     }
 

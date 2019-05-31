@@ -252,7 +252,8 @@ $string['restart_failed_analysis'] = 'Relancer les analyses échouées';
 $string['restart_failed_analysis_title'] = 'Relance des analyses échouées :';
 // Max attempt reached.
 $string['max_attempts_reach_files'] = 'Les fichiers suivants n\'ont pas pu être analysés par Compilatio. La limite de relance d\'analyses a été atteinte :';
-// Privacy (RGPD)
+
+// Privacy (RGPD).
 $string['privacy:metadata:core_files'] = 'Fichiers déposés ou créés depuis un champ de saisie';
 $string['privacy:metadata:core_plagiarism'] = 'Ce plugin est appelé par le sous-système de détection de plagiat de Moodle';
 
@@ -280,7 +281,7 @@ $string['privacy:metadata:external_compilatio_document:upload_date'] = 'L\'heure
 $string['privacy:metadata:external_compilatio_document:id'] = 'L\'identifiant de la soumission dans la base de données de Compilatio';
 $string['privacy:metadata:external_compilatio_document:indexed'] = 'L\'état d\'indéxation de la soumission (si elle est utilisée comme document de référence lors des analyses)';
 
-$string['privacy:metadata:external_compilatio_report'] = 'Informations à propos du rapport d\'analyse dans la base de données de Compilatio';
+$string['privacy:metadata:external_compilatio_report'] = 'Informations à propos du rapport d\'analyse dans la base de données de Compilatio (uniquement si le document a été analysé)';
 $string['privacy:metadata:external_compilatio_report:id'] = 'L\'identifiant Compilatio du rapport d\'analyse';
 $string['privacy:metadata:external_compilatio_report:doc_id'] = 'L\'identifiant Compilatio du document qui a été analysé';
 $string['privacy:metadata:external_compilatio_report:user_id'] = 'L\'identifiant de l\'utilisateur Compilatio qui a soumis le fichier - attention, cet utilisateur est celui qui est lié à la clé d\'API Compilatio sur la plateforme Moodle (c\'est donc souvent l\'administrateur de la plateforme)';
@@ -288,3 +289,9 @@ $string['privacy:metadata:external_compilatio_report:start'] = 'La date de débu
 $string['privacy:metadata:external_compilatio_report:end'] = 'La date de fin de l\'analyse';
 $string['privacy:metadata:external_compilatio_report:state'] = 'L\'état de l\'analyse de la soumission (Analysé, En attente, Temps dépassé...)';
 $string['privacy:metadata:external_compilatio_report:plagiarism_percent'] = 'Le pourcentage de similitudes trouvées pour cette soumission';
+
+$string['owner_file'] = 'RGPD et propriété du devoir';
+$string['owner_file_school'] = 'L\'établissement est propriétaire des devoirs';
+$string['owner_file_school_details'] = 'En cas de demande de suppression des données personnelles d\'un élève, le contenu des devoirs sera conservé et disponible pour une comparaison future avec de nouveaux devoirs. À échéance du contrat avec Compilatio, toutes les données à caractère personnel de votre établissement, dont les devoirs, sont supprimées dans les délais prévus contractuellement.';
+$string['owner_file_student'] = 'L\'élève est l\'unique propriétaire de son devoir';
+$string['owner_file_student_details'] = 'En cas de demande de suppression des données personnelles d\'un élève, les devoirs seront supprimés de la plateforme Moodle et de la bibliothèque de références Compilatio. Les devoirs ne seront plus disponibles pour une comparaison avec de nouveaux documents.';

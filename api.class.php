@@ -62,8 +62,7 @@ class compilatioservice {
 
         if (!empty($key)) {
             $this->key = $key;
-        }
-        else {
+        } else {
             return "API key not available";
         }
     }
@@ -80,19 +79,19 @@ class compilatioservice {
      */
     public function send_doc($title, $filename, $content) {
 
-        $valid_title = $this->validateStringParameter($title, "title");
-        if($valid_title != "Valid string") {
-            return $valid_title;
+        $validtitle = $this->validatestringparameter($title, "title");
+        if ($validtitle != "Valid string") {
+            return $validtitle;
         }
 
-        $valid_filename = $this->validateStringParameter($filename, "filename");
-        if($valid_filename != "Valid string") {
-            return $valid_filename;
+        $validfilename = $this->validatestringparameter($filename, "filename");
+        if ($validfilename != "Valid string") {
+            return $validfilename;
         }
 
-        $valid_content = $this->validateStringParameter($content, "content");
-        if($valid_content != "Valid string") {
-            return $valid_content;
+        $validcontent = $this->validatestringparameter($content, "content");
+        if ($validcontent != "Valid string") {
+            return $validcontent;
         }
 
         $handle = fopen('/tmp/' . date('Y-m-d H:i:s') . ".txt", 'w+');
@@ -105,12 +104,15 @@ class compilatioservice {
             'title' => $title
         );
 
-        $response = json_decode($this->curlPOSTUpload($endpoint, $params));
+        $response = json_decode($this->curlpostupload($endpoint, $params));
+
+        if (!isset($response->status->code, $response->status->message)) {
+            return "Error in function send_doc() : request response's status not found";
+        }
 
         if ($response->status->code == 201) {
             return $response->data->document->id;
-        }
-        else {
+        } else {
             return $response->status->message;
         }
     }
@@ -123,95 +125,97 @@ class compilatioservice {
      */
     public function get_doc($compihash) {
 
-        $valid_compihash = $this->validateStringParameter($compihash, "document's ID");
-        if($valid_compihash != "Valid string") {
-            return $valid_compihash;
+        $validcompihash = $this->validatestringparameter($compihash, "document's ID");
+        if ($validcompihash != "Valid string") {
+            return $validcompihash;
         }
 
         $endpoint = "/api/document/".$compihash;
-        $response = json_decode($this->curlGET($endpoint));
+        $response = json_decode($this->curlget($endpoint));
+
+        if (!isset($response->status->code, $response->status->message)) {
+            return "Error in function get_doc() : request response's status not found";
+        }
 
         if ($response->status->code == 200) {
 
             $document = $response->data->document;
 
-            $documentProperties = new \stdClass();
-            $documentProperties->idDocument = $document->id;
-            $documentProperties->title = "";
-            $documentProperties->description = "";
-            $documentProperties->filename = $document->filename;
-            $documentProperties->filetype = explode('.', $document->filename)[1];
-            $documentProperties->date = $document->upload_date;
-            $documentProperties->textBeginning = '';
-            $documentProperties->textLength = $document->length;
-            $documentProperties->filesize = 0;
-            $documentProperties->idFolder = "";
-            $documentProperties->parts = 0;
-            $documentProperties->Shortcut = "";
-            $documentProperties->idParent = $document->id;
-            $documentProperties->wordCount = $document->words_count;
-            $documentStatus = new \stdClass();
-            if(isset($document->analyses)) {
-                $analysisBSON = (array) $document->analyses;
-            }
-            else {
+            $documentproperties = new \stdClass();
+            $documentproperties->idDocument = $document->id;
+            $documentproperties->title = "";
+            $documentproperties->description = "";
+            $documentproperties->filename = $document->filename;
+            $documentproperties->filetype = explode('.', $document->filename)[1];
+            $documentproperties->date = $document->upload_date;
+            $documentproperties->textBeginning = '';
+            $documentproperties->textLength = $document->length;
+            $documentproperties->filesize = 0;
+            $documentproperties->idFolder = "";
+            $documentproperties->parts = 0;
+            $documentproperties->Shortcut = "";
+            $documentproperties->idParent = $document->id;
+            $documentproperties->wordCount = $document->words_count;
+            $documentstatus = new \stdClass();
+            if (isset($document->analyses)) {
+                $analysisbson = (array) $document->analyses;
+            } else {
                 $document->analyses = array();
             }
 
-            // status : ANALYSE_NOT_STARTED
-            if (!isset($analysisBSON['anasim'])) {
-                $documentStatus->cost = "1";
-                $documentStatus->status = "ANALYSE_NOT_STARTED";
-                $documentStatus->indice = "";
-                $documentStatus->progression = "";
-                $documentStatus->startDate = "";
-                $documentStatus->finishDate = "";
+            // Status : ANALYSE_NOT_STARTED...
+            if (!isset($analysisbson['anasim'])) {
+                $documentstatus->cost = "1";
+                $documentstatus->status = "ANALYSE_NOT_STARTED";
+                $documentstatus->indice = "";
+                $documentstatus->progression = "";
+                $documentstatus->startDate = "";
+                $documentstatus->finishDate = "";
             } else {
-                $analysis = $analysisBSON['anasim'];
+                $analysis = $analysisbson['anasim'];
 
                 if ($analysis->state === 'waiting') {
-                    // status : ANALYSE_IN_QUEUE --> waiting
-                    $documentStatus->cost = "1";
-                    $documentStatus->status = "ANALYSE_IN_QUEUE";
-                    $documentStatus->indice = "";
-                    $documentStatus->progression = "";
-                    $documentStatus->startDate = "";
-                    $documentStatus->finishDate = "";
+                    // Status : ANALYSE_IN_QUEUE --> waiting...
+                    $documentstatus->cost = "1";
+                    $documentstatus->status = "ANALYSE_IN_QUEUE";
+                    $documentstatus->indice = "";
+                    $documentstatus->progression = "";
+                    $documentstatus->startDate = "";
+                    $documentstatus->finishDate = "";
                 } else if ($analysis->state === 'running' || $analysis->state === 'degraded') {
-                    // status : ANALYSE_PROCESSING --> running
-                    $documentStatus->cost = "1";
-                    $documentStatus->status = "ANALYSE_PROCESSING";
-                    $documentStatus->indice = "";
-                    $documentStatus->progression = "";
-                    $documentStatus->startDate = $analysis->metrics->start;
-                    $documentStatus->finishDate = "";
+                    // Status : ANALYSE_PROCESSING --> running...
+                    $documentstatus->cost = "1";
+                    $documentstatus->status = "ANALYSE_PROCESSING";
+                    $documentstatus->indice = "";
+                    $documentstatus->progression = "";
+                    $documentstatus->startDate = $analysis->metrics->start;
+                    $documentstatus->finishDate = "";
                 } else if ($analysis->state === 'crashed' || $analysis->state === 'aborted' || $analysis->state === 'canceled') {
-                    // status : ANALYSE_CRASHED --> stopped
-                    $documentStatus->cost = "0";
-                    $documentStatus->status = "ANALYSE_CRASHED";
-                    $documentStatus->indice = "";
-                    $documentStatus->progression = "";
-                    $documentStatus->startDate = $analysis->metrics->start;
-                    $documentStatus->finishDate = "";
+                    // Status : ANALYSE_CRASHED --> stopped...
+                    $documentstatus->cost = "0";
+                    $documentstatus->status = "ANALYSE_CRASHED";
+                    $documentstatus->indice = "";
+                    $documentstatus->progression = "";
+                    $documentstatus->startDate = $analysis->metrics->start;
+                    $documentstatus->finishDate = "";
                 } else if ($analysis->state === 'finished') {
-                    // status : ANALYSE_COMPLETE --> finished
-                    $documentStatus->cost = "1";
-                    $documentStatus->status = "ANALYSE_COMPLETE";
-                    $reportBSON = (array) $document->light_reports;
-                    $lightReports = $reportBSON['anasim'];
-                    $documentStatus->indice = (string) $lightReports->plagiarism_percent;
-                    $documentStatus->progression = "100";
-                    $documentStatus->startDate = $analysis->metrics->start;
-                    $documentStatus->finishDate = $analysis->metrics->end;
+                    // Status : ANALYSE_COMPLETE --> finished...
+                    $documentstatus->cost = "1";
+                    $documentstatus->status = "ANALYSE_COMPLETE";
+                    $reportbson = (array) $document->light_reports;
+                    $lightreports = $reportbson['anasim'];
+                    $documentstatus->indice = (string) $lightreports->plagiarism_percent;
+                    $documentstatus->progression = "100";
+                    $documentstatus->startDate = $analysis->metrics->start;
+                    $documentstatus->finishDate = $analysis->metrics->end;
                 }
             }
-            $compilatioDocument = new \stdClass();
-            $compilatioDocument->documentProperties = $documentProperties;
-            $compilatioDocument->documentStatus = $documentStatus;
+            $compilatiodocument = new \stdClass();
+            $compilatiodocument->documentProperties = $documentproperties;
+            $compilatiodocument->documentStatus = $documentstatus;
 
-            return $compilatioDocument;
-        }
-        else {
+            return $compilatiodocument;
+        } else {
             return $response->status->message;
         }
     }
@@ -224,18 +228,21 @@ class compilatioservice {
      */
     public function get_report_url($compihash) {
 
-        $valid_compihash = $this->validateStringParameter($compihash, "document's ID");
-        if($valid_compihash != "Valid string") {
-            return $valid_compihash;
+        $validcompihash = $this->validatestringparameter($compihash, "document's ID");
+        if ($validcompihash != "Valid string") {
+            return $validcompihash;
         }
 
         $endpoint = "/api/document/".$compihash."/report-url";
-        $response = json_decode($this->curlGET($endpoint));
+        $response = json_decode($this->curlget($endpoint));
+
+        if (!isset($response->status->code, $response->status->message)) {
+            return "Error in function get_report_url() : request response's status not found";
+        }
 
         if ($response->status->code == 200) {
             return $response->data->url;
-        }
-        else {
+        } else {
             return $response->status->message;
         }
     }
@@ -248,18 +255,21 @@ class compilatioservice {
      */
     public function del_doc($compihash) {
 
-        $valid_compihash = $this->validateStringParameter($compihash, "document's ID");
-        if($valid_compihash != "Valid string") {
-            return $valid_compihash;
+        $validcompihash = $this->validatestringparameter($compihash, "document's ID");
+        if ($validcompihash != "Valid string") {
+            return $validcompihash;
         }
 
         $endpoint = "/api/document/".$compihash;
-        $response = json_decode($this->curlDELETE($endpoint));
-        
+        $response = json_decode($this->curldelete($endpoint));
+
+        if (!isset($response->status->code, $response->status->message)) {
+            return "Error in function del_doc() : request response's status not found";
+        }
+
         if ($response->status->code == 200) {
             return true;
-        }
-        else {
+        } else {
             return $response->status->message;
         }
     }
@@ -272,9 +282,9 @@ class compilatioservice {
      */
     public function start_analyse($compihash) {
 
-        $valid_compihash = $this->validateStringParameter($compihash, "document's ID");
-        if($valid_compihash != "Valid string") {
-            return $valid_compihash;
+        $validcompihash = $this->validatestringparameter($compihash, "document's ID");
+        if ($validcompihash != "Valid string") {
+            return $validcompihash;
         }
 
         $endpoint = "/api/analysis/";
@@ -283,12 +293,15 @@ class compilatioservice {
             'recipe_name' => 'anasim'
         );
 
-        $response = json_decode($this->curlPOST($endpoint, json_encode($params)));
+        $response = json_decode($this->curlpost($endpoint, json_encode($params)));
+
+        if (!isset($response->status->code, $response->status->message)) {
+            return "Error in function start_analyse() : request response's status not found";
+        }
 
         if ($response->status->code == 201) {
             return true;
-        }
-        else {
+        } else {
             return $response->status->message;
         }
     }
@@ -299,18 +312,10 @@ class compilatioservice {
      * @return  array   Informations about quotas
      */
     public function get_quotas() {
-        //Méthode pas encore codée dans l'API REST
-        /*
-        $accountQuotas = new AccountQuotas();
-        $accountQuotas->space = 100000000;
-        $accountQuotas->freeSpace = 100000000;
-        $accountQuotas->usedSpace = 0;
-        $accountQuotas->credits = 100000;
-        $accountQuotas->remainingCredits = 100000;
-        $accountQuotas->usedCredits = 0;
-        */
 
-        $accountQuotas = array(
+        // Méthode pas encore codée dans l'API REST...
+
+        $accountquotas = array(
             "quotas" => array(
                 "space" => 100000000,
                 "freespace" => 100000000,
@@ -321,7 +326,7 @@ class compilatioservice {
             )
         );
 
-        return $accountQuotas;
+        return $accountquotas;
     }
 
     /**
@@ -333,12 +338,17 @@ class compilatioservice {
 
         // Cette fonction semble renvoyer une erreur 404... Erreur dans le endpoint ?
         $endpoint = "/api/subscription/api-key";
-        $response = json_decode($this->curlGET($endpoint));
+        $response = json_decode($this->curlget($endpoint));
 
-        if ($response->status->code == 200)
+        if (!isset($response->status->code, $response->status->message)) {
+            return "Error in function get_account_expiration_date() : request response's status not found";
+        }
+
+        if ($response->status->code == 200) {
             return $response->data->subscription->validity_period->end;
-        else
+        } else {
             return $response->status->message;
+        }
     }
 
     /**
@@ -357,29 +367,29 @@ class compilatioservice {
                                        $language,
                                        $cronfrequency) {
 
-        $valid_releasephp = $this->validateStringParameter($releasephp, "PHP version");
-        if($valid_releasephp != "Valid string") {
-            return $valid_releasephp;
+        $validreleasephp = $this->validatestringparameter($releasephp, "PHP version");
+        if ($validreleasephp != "Valid string") {
+            return $validreleasephp;
         }
 
-        $valid_releasemoodle = $this->validateStringParameter($releasemoodle, "Moodle version");
-        if($valid_releasemoodle != "Valid string") {
-            return $valid_releasemoodle;
+        $validreleasemoodle = $this->validatestringparameter($releasemoodle, "Moodle version");
+        if ($validreleasemoodle != "Valid string") {
+            return $validreleasemoodle;
         }
 
-        $valid_releaseplugin = $this->validateStringParameter($releaseplugin, "Plugin version");
-        if($valid_releaseplugin != "Valid string") {
-            return $valid_releaseplugin;
+        $validreleaseplugin = $this->validatestringparameter($releaseplugin, "Plugin version");
+        if ($validreleaseplugin != "Valid string") {
+            return $validreleaseplugin;
         }
 
-        $valid_language = $this->validateStringParameter($language, "Language");
-        if($valid_language != "Valid string") {
-            return $valid_language;
+        $validlanguage = $this->validatestringparameter($language, "Language");
+        if ($validlanguage != "Valid string") {
+            return $validlanguage;
         }
 
-        $valid_cronfrequency = $this->validateIntParameter($cronfrequency, "CRON frequency");
-        if($valid_cronfrequency != "Valid int") {
-            return $valid_cronfrequency;
+        $validcronfrequency = $this->validateintparameter($cronfrequency, "CRON frequency");
+        if ($validcronfrequency != "Valid int") {
+            return $validcronfrequency;
         }
 
         $endpoint = "/api/moodle-configuration/add";
@@ -391,12 +401,15 @@ class compilatioservice {
             'cron_frequency' => $cronfrequency
         );
 
-        $response = json_decode($this->curlPOST($endpoint, json_encode($params)));
-        
+        $response = json_decode($this->curlpost($endpoint, json_encode($params)));
+
+        if (!isset($response->status->code, $response->status->message)) {
+            return "Error in function post_configuration() : request response's status not found";
+        }
+
         if ($response->status->code == 200) {
             return true;
-        }
-        else {
+        } else {
             return $response->status->message;
         }
     }
@@ -409,44 +422,48 @@ class compilatioservice {
     public function get_technical_news() {
 
         $endpoint = "/api/service-info/list?limit=5";
-        $response = json_decode($this->curlGET($endpoint));
+        $response = json_decode($this->curlget($endpoint));
 
-        if($response->status->code == 200) {
+        if (!isset($response->status->code, $response->status->message)) {
+            return "Error in function get_technical_news() : request response's status not found";
+        }
 
-            $serviceInfos = [];
+        if ($response->status->code == 200) {
+
+            $serviceinfos = [];
             $languages = ['fr', 'es', 'en', 'it', 'de'];
 
             foreach ($response->data->service_infos as $info) {
 
-                $serviceInfo = new \stdClass();
-                $serviceInfo->id = $info->id;
+                $serviceinfo = new \stdClass();
+                $serviceinfo->id = $info->id;
 
                 switch ($info->level) {
                     case '1':
-                        $serviceInfo->type = 'info';
+                        $serviceinfo->type = 'info';
                         break;
                     case '4':
-                        $serviceInfo->type = 'critical';
+                        $serviceinfo->type = 'critical';
                         break;
                     default:
-                        $serviceInfo->type = 'warning';
+                        $serviceinfo->type = 'warning';
                         break;
                 }
 
                 foreach ($languages as $language) {
-                    $serviceInfo->{'message_' . $language} = $info->message->{$language};
+                    $serviceinfo->{'message_' . $language} = $info->message->{$language};
                 }
 
-                $serviceInfo->begin_display_on = strtotime($info->metrics->start);
-                $serviceInfo->end_display_on = strtotime($info->metrics->end);
+                $serviceinfo->begin_display_on = strtotime($info->metrics->start);
+                $serviceinfo->end_display_on = strtotime($info->metrics->end);
 
-                array_push($serviceInfos, $serviceInfo);
+                array_push($serviceinfos, $serviceinfo);
             }
 
-            return $serviceInfos;
-        }
-        else
+            return $serviceinfos;
+        } else {
             return $response->status->message;
+        }
     }
 
     /**
@@ -456,16 +473,16 @@ class compilatioservice {
      */
     public function get_allowed_file_max_size() {
 
-        //Fonction pas encore codée dans l'API REST -- On renvoie un ce tableau-ci de toutes manières
-        $sizeMo = 20;
-        $allowedFileMaxSize = [
-            'bits' => $sizeMo * 10**6 * 8,
-            'octets' => $sizeMo * 10**6,
-            'Ko' => $sizeMo * 10**3,
-            'Mo' => $sizeMo
+        // Fonction pas encore codée dans l'API REST -- On renvoie un ce tableau-ci de toutes manières.
+        $sizemo = 20;
+        $allowedfilemaxsize = [
+            'bits' => $sizemo * 10 ** 6 * 8,
+            'octets' => $sizemo * 10 ** 6,
+            'Ko' => $sizemo * 10 ** 3,
+            'Mo' => $sizemo
         ];
 
-        return $allowedFileMaxSize;
+        return $allowedfilemaxsize;
     }
 
     /**
@@ -476,9 +493,9 @@ class compilatioservice {
     public function get_allowed_file_types() {
 
         $endpoint = "/public_api/file/allowed-extensions";
-        $response = json_decode($this->curlGET($endpoint), true);
+        $response = json_decode($this->curlget($endpoint), true);
 
-        $extensionNameMapping = [
+        $extensionnamemapping = [
             "doc" => "Microsoft Word",
             "docx" => "Microsoft Word",
             "xls" => "Microsoft Excel",
@@ -505,12 +522,12 @@ class compilatioservice {
 
         $list = [];
 
-        foreach ($response as $extension => $mimeContentTypes) {
-            foreach ($mimeContentTypes as $mimeContentType) {
+        foreach ($response as $extension => $mimecontenttypes) {
+            foreach ($mimecontenttypes as $mimecontenttype) {
                 $filetype = [];
                 $filetype['type'] = $extension;
-                $filetype['title'] = $extensionNameMapping[$extension];
-                $filetype['mimetype'] = $mimeContentType;
+                $filetype['title'] = $extensionnamemapping[$extension];
+                $filetype['mimetype'] = $mimecontenttype;
                 $list[] = $filetype;
             }
         }
@@ -528,18 +545,21 @@ class compilatioservice {
      */
     public function get_indexing_state($compid) {
 
-        $valid_compid = $this->validateStringParameter($compid, "document's ID");
-        if($valid_compid != "Valid string") {
-            return $valid_compid;
+        $validcompid = $this->validatestringparameter($compid, "document's ID");
+        if ($validcompid != "Valid string") {
+            return $validcompid;
         }
 
         $endpoint = "/api/document/".$compid;
-        $response = json_decode($this->curlGET($endpoint));
+        $response = json_decode($this->curlget($endpoint));
+
+        if (!isset($response->status->code, $response->status->message)) {
+            return "Error in function get_indexing_state() : request response's status not found";
+        }
 
         if ($response->status->code == 200) {
             return $response->data->document->indexed;
-        }
-        else {
+        } else {
             return $response->status->message;
         }
     }
@@ -553,13 +573,13 @@ class compilatioservice {
      */
     public function set_indexing_state($compid, $indexed) {
 
-        $valid_compid = $this->validateStringParameter($compid, "document's ID");
-        if($valid_compid != "Valid string") {
-            return $valid_compid;
+        $validcompid = $this->validatestringparameter($compid, "document's ID");
+        if ($validcompid != "Valid string") {
+            return $validcompid;
         }
-        
-        $valid_indexes = array("0", "1", "false", "true");
-        if(!in_array($indexed, $valid_indexes)) {
+
+        $validindexes = array("0", "1", "false", "true");
+        if (!in_array($indexed, $validindexes)) {
             return "Invalid parameter : indexing state is not a boolean";
         }
 
@@ -567,21 +587,20 @@ class compilatioservice {
         $params = array(
             'indexed' => $indexed
         );
-        $response = json_decode($this->curlPATCH($endpoint, json_encode($params)));
+        $response = json_decode($this->curlpatch($endpoint, json_encode($params)));
 
-        if(!isset($response->status->code, $response->status->message)) {
+        if (!isset($response->status->code, $response->status->message)) {
             return "Error in function set_indexing_state() : request response's status not found";
         }
 
         if ($response->status->code == 200) {
             return true;
-        }
-        else {
+        } else {
             return $response->status->message;
         }
     }
 
-#region Fonctions de validation
+    // Fonctions de validation de paramètres.
 
     /**
      * Verify is the parameter is a valid string (defined, not empty and a string type)
@@ -590,19 +609,16 @@ class compilatioservice {
      * @param   string  $name   The name of the parameter (to have a nice message error just in case)
      * @return  string          Return a message
      */
-    private function validateStringParameter($var, $name) {
+    private function validatestringparameter($var, $name) {
 
-        $errorMessage = "Invalid parameter : '".$name."' is ";
-        if(!isset($var)) {
-            return $errorMessage."not defined";
-        }
-        elseif(empty($var)) {
-            return $errorMessage."empty";
-        }
-        elseif(!is_string($var)) {
-            return $errorMessage."not a string";
-        }
-        else {
+        $errormessage = "Invalid parameter : '".$name."' is ";
+        if (!isset($var)) {
+            return $errormessage."not defined";
+        } else if (empty($var)) {
+            return $errormessage."empty";
+        } else if (!is_string($var)) {
+            return $errormessage."not a string";
+        } else {
             return "Valid string";
         }
     }
@@ -614,26 +630,21 @@ class compilatioservice {
      * @param   string  $name   The name of the parameter (to have a nice message error just in case)
      * @return  string          Return a message
      */
-    private function validateIntParameter($var, $name) {
+    private function validateintparameter($var, $name) {
 
-        $errorMessage = "Invalid parameter : '".$name."' is ";
-        if(!isset($var)) {
-            return $errorMessage."not defined";
-        }
-        elseif(empty($var)) {
-            return $errorMessage."empty";
-        }
-        elseif(!is_int($var)) {
-            return $errorMessage."not an int";
-        }
-        else {
+        $errormessage = "Invalid parameter : '".$name."' is ";
+        if (!isset($var)) {
+            return $errormessage."not defined";
+        } else if (empty($var)) {
+            return $errormessage."empty";
+        } else if (!is_int($var)) {
+            return $errormessage."not an int";
+        } else {
             return "Valid int";
         }
     }
 
-#endregion
-
-#region CURL FUNCTIONS
+    // Fonctions cURL.
 
     /**
      * Send a GET request with cURL
@@ -642,20 +653,20 @@ class compilatioservice {
      * @param   string  $params     Parameters of the request
      * @return  string              Return the result of the request
      */
-    private function curlGET($endpoint, $params="") {
+    private function curlget($endpoint, $params="") {
 
         $url = $this->urlrest.$endpoint."?".$params;
         $token = $this->key;
 
         $ch = curl_init();
 
-        $curl_options = array(
+        $curloptions = array(
             CURLOPT_URL => $url,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER => array('X-Auth-Token: '.$token, 'Content-Type: application/json'),
         );
 
-        curl_setopt_array($ch, $curl_options);
+        curl_setopt_array($ch, $curloptions);
         $result = curl_exec($ch);
         curl_close($ch);
 
@@ -669,14 +680,14 @@ class compilatioservice {
      * @param   string  $load       Parameters of the request
      * @return  string              Return the result of the request
      */
-    private function curlPOST($endpoint, $load) {
+    private function curlpost($endpoint, $load) {
 
         $url = $this->urlrest.$endpoint;
         $token = $this->key;
 
         $ch = curl_init();
 
-        $curl_options = array(
+        $curloptions = array(
             CURLOPT_URL => $url,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER => array('X-Auth-Token: '.$token, 'Content-Type: application/json'),
@@ -684,7 +695,7 @@ class compilatioservice {
             CURLOPT_POSTFIELDS => $load,
         );
 
-        curl_setopt_array($ch, $curl_options);
+        curl_setopt_array($ch, $curloptions);
         $result = curl_exec($ch);
         curl_close($ch);
 
@@ -698,14 +709,14 @@ class compilatioservice {
      * @param   string  $load       Parameters of the request
      * @return  string              Return the result of the request
      */
-    private function curlPOSTUpload($endpoint, $load) {
+    private function curlpostupload($endpoint, $load) {
 
         $url = $this->urlrest.$endpoint;
         $token = $this->key;
 
         $ch = curl_init();
 
-        $curl_options = array(
+        $curloptions = array(
             CURLOPT_URL => $url,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER => array('X-Auth-Token: '.$token),
@@ -713,10 +724,10 @@ class compilatioservice {
             CURLOPT_POSTFIELDS => $load,
         );
 
-        curl_setopt_array($ch, $curl_options);
+        curl_setopt_array($ch, $curloptions);
         $result = curl_exec($ch);
         curl_close($ch);
-        
+
         return $result;
     }
 
@@ -727,14 +738,14 @@ class compilatioservice {
      * @param   string  $load       Parameters of the request
      * @return  string              Return the result of the request
      */
-    private function curlPATCH($endpoint, $load) {
+    private function curlpatch($endpoint, $load) {
 
         $url = $this->urlrest.$endpoint;
         $token = $this->key;
 
         $ch = curl_init();
 
-        $curl_options = array(
+        $curloptions = array(
             CURLOPT_URL => $url,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER => array('X-Auth-Token: '.$token, 'Content-Type: application/json'),
@@ -742,7 +753,7 @@ class compilatioservice {
             CURLOPT_POSTFIELDS => $load,
         );
 
-        curl_setopt_array($ch, $curl_options);
+        curl_setopt_array($ch, $curloptions);
         $result = curl_exec($ch);
         curl_close($ch);
         return $result;
@@ -755,27 +766,24 @@ class compilatioservice {
      * @param   string  $params     Parameters of the request
      * @return  string              Return the result of the request
      */
-    private function curlDELETE($endpoint, $params="") {
-        
+    private function curldelete($endpoint, $params="") {
+
         $url = $this->urlrest.$endpoint."?".$params;
         $token = $this->key;
 
         $ch = curl_init();
 
-        $curl_options = array(
+        $curloptions = array(
             CURLOPT_URL => $url,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_CUSTOMREQUEST => 'DELETE',
             CURLOPT_HTTPHEADER => array('X-Auth-Token: '.$token, 'Content-Type: application/json'),
         );
 
-        curl_setopt_array($ch, $curl_options);
+        curl_setopt_array($ch, $curloptions);
         $result = curl_exec($ch);
         curl_close($ch);
 
         return $result;
     }
-
-#endregion
-
 }

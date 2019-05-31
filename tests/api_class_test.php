@@ -14,12 +14,26 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * api_class_test.php - Test class of the new REST API calls
+ *
+ * @package    plagiarism_compilatio
+ * @copyright  2019 Compilatio
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 
 require_once($CFG->dirroot.'/plagiarism/compilatio/api.class.php');
 
+/**
+ * Class api_class_test
+ *
+ * @copyright  2019 Compilatio.net {@link https://www.compilatio.net}
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class api_class_test extends advanced_testcase {
 
     /**
@@ -46,98 +60,113 @@ class api_class_test extends advanced_testcase {
      */
     const DOC_REPORT_URL = "https://beta.compilatio.net/api/report/redirect/eb9be05b3345ac4542de1fcfbb93e41420fd96d5";
 
+    // Différentes instances de compilatioservice pour les tests...
     /**
-     * Différentes instances de compilatioservice pour les tests
+     * @var \compilatioservice  $compilatio             Classe compilatioservice valide
      */
-    protected static $compilatio; //compilatioservice valide
-    protected static $compilatioInvKey1; //compilatioservice avec une clé d'API invalide
-    protected static $compilatioInvKey2;
-    protected static $compilatioAuthReq1; //compilatioservice avec une clé d'API non spécifiée
-    protected static $compilatioAuthReq2;
+    protected static $compilatio;
 
     /**
-     * Les différentes variables utilisées lors des tests
+     * @var \compilatioservice  $compilatioinvkey1      Classe compilatio avec une clé d'API invalide
      */
-    //Variables pour la fonction send_doc
-    private $title = "Title--UnitTest";
-    private $filename = "Filename--UnitTest.txt";
-    private $content = "Test d'un upload de fichier avec l'API REST -- Test Unitaire";
-    //Variables pour la fonction post_configuration
-    private $releasephp = "7.0.33-0ubuntu0.16.04.3";
-    private $releasemoodle = "3.6 (Build: 20181203)";
-    private $releaseplugin = "2019030500";
-    private $language = "fr";
-    private $cronfrequency = 1;
+    protected static $compilatioinvkey1;
+    /**
+     * @var \compilatioservice  $compilatioinvkey2      Classe compilatio avec une clé d'API invalide
+     */
+    protected static $compilatioinvkey2;
 
     /**
-     * setUpBeforeClass() -> fonction lancée avant tous les tests | on instancie des 'compilatioservice' avec différentes clé d'API 
+     * @var \compilatioservice  $compilatioauthreq1     Classe compilatio avec une clé d'API non spécifiée
+     */
+    protected static $compilatioauthreq1;
+    /**
+     * @var \compilatioservice  $compilatioauthreq2     Classe compilatio avec une clé d'API non spécifiée
+     */
+    protected static $compilatioauthreq2;
+
+    /**
+     * @var array   $senddocvalues  Variables pour la fonction send_doc
+     */
+    private $senddocvalues = array(
+        'title' => 'Title--UnitTest',
+        'filename' => 'Filename--UnitTest.txt',
+        'content' => 'Test d\'un upload de fichier avec l\'API REST -- Test Unitaire'
+    );
+
+    /**
+     * @var array   $postconfigurationvalues    Variables pour la fonction post_configuration
+     */
+    private $postconfigurationvalues = array(
+        'releasephp' => '7.0.33-0ubuntu0.16.04.3',
+        'releasemoodle' => '3.6 (Build: 20181203)',
+        'releaseplugin' => '2019030500',
+        'language' => 'fr',
+        'cronfrequency' => 1
+    );
+
+    /**
+     * setUpBeforeClass() -> fonction lancée avant tous les tests
+     * On instancie des 'compilatioservice' avec différentes clé d'API
      */
     public static function setUpBeforeClass() {
 
         self::$compilatio = new compilatioservice(self::API_KEY, self::API_URL);
-        self::$compilatioInvKey1 = new compilatioservice("abcdef", self::API_URL);
-        self::$compilatioInvKey2 = new compilatioservice(42, self::API_URL);
-        self::$compilatioAuthReq1 = new compilatioservice("", self::API_URL);
-        self::$compilatioAuthReq2 = new compilatioservice(null, self::API_URL);
+        self::$compilatioinvkey1 = new compilatioservice("abcdef", self::API_URL);
+        self::$compilatioinvkey2 = new compilatioservice(42, self::API_URL);
+        self::$compilatioauthreq1 = new compilatioservice("", self::API_URL);
+        self::$compilatioauthreq2 = new compilatioservice(null, self::API_URL);
     }
 
-//-------- TESTS FONCTION GET_TECHNICAL_NEWS --------
-#region Fonction get_technical_news
+    // TESTS FONCTION GET_TECHNICAL_NEWS...
 
     /**
      * Test fonction get_technical_news -> attend un tableau avec des news
      */
-    public function test_get_technical_news_OK() {
+    public function test_get_technical_news_ok() {
 
         $news = self::$compilatio->get_technical_news();
 
         $this->assertTrue(isset($news));
-        $this->assertEquals('array', getType($news));
+        $this->assertEquals('array', gettype($news));
     }
 
     /**
      * Test fonction get_technical_news -> attend une erreur (clé d'API invalide ou non spécifiée (authentification requise))
      */
-    public function test_get_technical_news_ERRORSAPIKEY() {
+    public function test_get_technical_news_errorsapikey() {
 
-        $this->assertEquals("Invalid API key", self::$compilatioInvKey1->get_technical_news());
-        $this->assertEquals("Invalid API key", self::$compilatioInvKey2->get_technical_news());
+        $this->assertEquals("Invalid API key", self::$compilatioinvkey1->get_technical_news());
+        $this->assertEquals("Invalid API key", self::$compilatioinvkey2->get_technical_news());
 
-        $this->assertEquals("Authentication Required", self::$compilatioAuthReq1->get_technical_news());
-        $this->assertEquals("Authentication Required", self::$compilatioAuthReq2->get_technical_news());
+        $this->assertEquals("Authentication Required", self::$compilatioauthreq1->get_technical_news());
+        $this->assertEquals("Authentication Required", self::$compilatioauthreq2->get_technical_news());
     }
 
-#endregion
-
-//-------- TESTS FONCTION GET_ALLOWED_FILE_MAX_SIZE --------
-#region Fonction get_allowed_file_max_size
+    // TESTS FONCTION GET_ALLOWED_FILE_MAX_SIZE...
 
     /**
      * Test fonction get_allowed_file_max_size -> attend un tableau avec les tailles maximales
      */
-    public function test_get_allowed_file_max_size_OK() {
+    public function test_get_allowed_file_max_size_ok() {
 
         $size = self::$compilatio->get_allowed_file_max_size();
 
-        $this->assertEquals('array', getType($size));
+        $this->assertEquals('array', gettype($size));
         $this->assertNotCount(0, $size);
         $this->assertArrayHasKey("Ko", $size);
         $this->assertArrayHasKey("Mo", $size);
     }
 
-#endregion
-
-//-------- TESTS FONCTION GET_ALLOWED_FILE_TYPES --------
-#region Fonction get_allowed_file_types
+    // TESTS FONCTION GET_ALLOWED_FILE_TYPES...
 
     /**
      * Test fonction get_allowed_file_types -> attend un tableau
      */
-    public function test_get_allowed_file_types_OK() {
+    public function test_get_allowed_file_types_ok() {
 
         $types = self::$compilatio->get_allowed_file_types();
 
-        $this->assertEquals('array', getType($types));
+        $this->assertEquals('array', gettype($types));
         $this->assertNotCount(0, $types);
         $this->assertCount(24, $types);
 
@@ -151,24 +180,21 @@ class api_class_test extends advanced_testcase {
         $this->assertEquals('application/pdf', $types[10]['mimetype']);
     }
 
-#endregion
-
-//-------- TESTS FONCTION GET_QUOTAS --------
-#region Fonction get_quotas
+    // TESTS FONCTION GET_QUOTAS...
 
     /**
      * Test fonction get_quotas -> attend un array
      */
-    public function test_get_quotas_OK() {
+    public function test_get_quotas_ok() {
 
-        $arrayQuotas = self::$compilatio->get_quotas();
+        $arrayquotas = self::$compilatio->get_quotas();
 
-        $this->assertEquals('array', getType($arrayQuotas));
-        $this->assertNotCount(0, $arrayQuotas);
+        $this->assertEquals('array', gettype($arrayquotas));
+        $this->assertNotCount(0, $arrayquotas);
 
-        $quotas = $arrayQuotas['quotas'];
+        $quotas = $arrayquotas['quotas'];
 
-        $this->assertEquals('array', getType($quotas));
+        $this->assertEquals('array', gettype($quotas));
         $this->assertNotCount(0, $quotas);
 
         $this->assertArrayHasKey('space', $quotas);
@@ -179,139 +205,155 @@ class api_class_test extends advanced_testcase {
         $this->assertArrayHasKey('usedCredits', $quotas);
     }
 
-#endregion
-
-//-------- TESTS FONCTION POST_CONFIGURATION --------
-#region Fonction post_configuration
+    // TESTS FONCTION POST_CONFIGURATION...
 
     /**
      * Test fonction post_configuration -> attend true
      */
-    public function test_post_configuration_OK() {
+    public function test_post_configuration_ok() {
 
-        $releasephp = $this->releasephp;
-        $releasemoodle = $this->releasemoodle;
-        $releaseplugin = $this->releaseplugin;
-        $language = $this->language;
-        $cronfrequency = $this->cronfrequency;
+        $releasephp = $this->postconfigurationvalues['releasephp'];
+        $releasemoodle = $this->postconfigurationvalues['releasemoodle'];
+        $releaseplugin = $this->postconfigurationvalues['releaseplugin'];
+        $language = $this->postconfigurationvalues['language'];
+        $cronfrequency = $this->postconfigurationvalues['cronfrequency'];
 
-        $this->assertTrue(self::$compilatio->post_configuration($releasephp, $releasemoodle, $releasemoodle, $language, $cronfrequency));
+        $this->assertTrue(self::$compilatio->post_configuration($releasephp,
+            $releasemoodle, $releasemoodle, $language, $cronfrequency));
     }
 
     /**
      * Test fonction post_configuration avec différents paramètres -> attend des erreurs selon les paramètres
-     * 
+     *
      * @param   string  $releasephp     PHP version
      * @param   string  $releasemoodle  Moodle version
      * @param   string  $releaseplugin  Plugin version
      * @param   string  $language       Language
      * @param   int     $cronfrequency  CRON frequency
      * @param   mixed   $expected       Result expected
-     * 
-     * @dataProvider post_configuration_DataProvider
+     *
+     * @dataProvider post_configuration_dataprovider
      */
-    public function test_post_configuration_INVALIDPARAMETERS($releasephp, $releasemoodle, $releaseplugin, $language, $cronfrequency, $expected) {
+    public function test_post_configuration_invalidparameters($releasephp,
+        $releasemoodle, $releaseplugin, $language, $cronfrequency, $expected) {
 
-        $this->assertEquals($expected, self::$compilatio->post_configuration($releasephp, $releasemoodle, $releaseplugin, $language, $cronfrequency));
+        $this->assertEquals($expected, self::$compilatio->post_configuration($releasephp,
+            $releasemoodle, $releaseplugin, $language, $cronfrequency));
     }
 
     /**
-     * DataProvider de test_post_configuration_INVALIDPARAMETERS
+     * DataProvider de test_post_configuration_invalidparameters
      */
-    public function post_configuration_DataProvider() {
+    public function post_configuration_dataprovider() {
 
-        $releasephp = $this->releasephp;
-        $releasemoodle = $this->releasemoodle;
-        $releaseplugin = $this->releaseplugin;
-        $language = $this->language;
-        $cronfrequency = $this->cronfrequency;
+        $releasephp = $this->postconfigurationvalues['releasephp'];
+        $releasemoodle = $this->postconfigurationvalues['releasemoodle'];
+        $releaseplugin = $this->postconfigurationvalues['releaseplugin'];
+        $language = $this->postconfigurationvalues['language'];
+        $cronfrequency = $this->postconfigurationvalues['cronfrequency'];
 
         return [
-            'PHP version not defined'       => [null, $releasemoodle, $releaseplugin, $language, $cronfrequency, "Invalid parameter : 'PHP version' is not defined"],
-            'PHP version empty'             => ["", $releasemoodle, $releaseplugin, $language, $cronfrequency, "Invalid parameter : 'PHP version' is empty"],
-            'PHP version not a string'      => [42, $releasemoodle, $releaseplugin, $language, $cronfrequency, "Invalid parameter : 'PHP version' is not a string"],
+            'PHP version not defined'       => [null, $releasemoodle, $releaseplugin,
+                $language, $cronfrequency, "Invalid parameter : 'PHP version' is not defined"],
+            'PHP version empty'             => ["", $releasemoodle, $releaseplugin,
+                $language, $cronfrequency, "Invalid parameter : 'PHP version' is empty"],
+            'PHP version not a string'      => [42, $releasemoodle, $releaseplugin,
+                $language, $cronfrequency, "Invalid parameter : 'PHP version' is not a string"],
 
-            'Moodle version not defined'    => [$releasephp, null, $releaseplugin, $language, $cronfrequency, "Invalid parameter : 'Moodle version' is not defined"],
-            'Moodle version empty'          => [$releasephp, "", $releaseplugin, $language, $cronfrequency, "Invalid parameter : 'Moodle version' is empty"],
-            'Moodle version not a string'   => [$releasephp, 42, $releaseplugin, $language, $cronfrequency, "Invalid parameter : 'Moodle version' is not a string"],
+            'Moodle version not defined'    => [$releasephp, null, $releaseplugin,
+                $language, $cronfrequency, "Invalid parameter : 'Moodle version' is not defined"],
+            'Moodle version empty'          => [$releasephp, "", $releaseplugin,
+                $language, $cronfrequency, "Invalid parameter : 'Moodle version' is empty"],
+            'Moodle version not a string'   => [$releasephp, 42, $releaseplugin,
+                $language, $cronfrequency, "Invalid parameter : 'Moodle version' is not a string"],
 
-            'Plugin version not defined'    => [$releasephp, $releasemoodle, null, $language, $cronfrequency, "Invalid parameter : 'Plugin version' is not defined"],
-            'Plugin version empty'          => [$releasephp, $releasemoodle, "", $language, $cronfrequency, "Invalid parameter : 'Plugin version' is empty"],
-            'Plugin version not a string'   => [$releasephp, $releasemoodle, 42, $language, $cronfrequency, "Invalid parameter : 'Plugin version' is not a string"],
+            'Plugin version not defined'    => [$releasephp, $releasemoodle, null,
+                $language, $cronfrequency, "Invalid parameter : 'Plugin version' is not defined"],
+            'Plugin version empty'          => [$releasephp, $releasemoodle, "",
+                $language, $cronfrequency, "Invalid parameter : 'Plugin version' is empty"],
+            'Plugin version not a string'   => [$releasephp, $releasemoodle, 42,
+                $language, $cronfrequency, "Invalid parameter : 'Plugin version' is not a string"],
 
-            'Language not defined'          => [$releasephp, $releasemoodle, $releaseplugin, null, $cronfrequency, "Invalid parameter : 'Language' is not defined"],
-            'Language empty'                => [$releasephp, $releasemoodle, $releaseplugin, "", $cronfrequency, "Invalid parameter : 'Language' is empty"],
-            'Language not a string'         => [$releasephp, $releasemoodle, $releaseplugin, 42, $cronfrequency, "Invalid parameter : 'Language' is not a string"],
+            'Language not defined'          => [$releasephp, $releasemoodle, $releaseplugin,
+                null, $cronfrequency, "Invalid parameter : 'Language' is not defined"],
+            'Language empty'                => [$releasephp, $releasemoodle, $releaseplugin,
+                "", $cronfrequency, "Invalid parameter : 'Language' is empty"],
+            'Language not a string'         => [$releasephp, $releasemoodle, $releaseplugin,
+                42, $cronfrequency, "Invalid parameter : 'Language' is not a string"],
 
-            'CRON frequency not defined'    => [$releasephp, $releasemoodle, $releaseplugin, $language, null, "Invalid parameter : 'CRON frequency' is not defined"],
-            'CRON frequency empty'          => [$releasephp, $releasemoodle, $releaseplugin, $language, "", "Invalid parameter : 'CRON frequency' is empty"],
-            'CRON frequency not an int'     => [$releasephp, $releasemoodle, $releaseplugin, $language, "1", "Invalid parameter : 'CRON frequency' is not an int"]
+            'CRON frequency not defined'    => [$releasephp, $releasemoodle, $releaseplugin,
+                $language, null, "Invalid parameter : 'CRON frequency' is not defined"],
+            'CRON frequency empty'          => [$releasephp, $releasemoodle, $releaseplugin,
+                $language, "", "Invalid parameter : 'CRON frequency' is empty"],
+            'CRON frequency not an int'     => [$releasephp, $releasemoodle, $releaseplugin,
+                $language, "1", "Invalid parameter : 'CRON frequency' is not an int"]
         ];
     }
 
     /**
      * Test fonction post_configuration -> attend une erreur (clé d'API invalide ou non spécifiée (authentification requise))
      */
-    public function test_post_configuration_ERRORSAPIKEY() {
+    public function test_post_configuration_errorsapikey() {
 
-        $releasephp = $this->releasephp;
-        $releasemoodle = $this->releasemoodle;
-        $releaseplugin = $this->releaseplugin;
-        $language = $this->language;
-        $cronfrequency = $this->cronfrequency;
+        $releasephp = $this->postconfigurationvalues['releasephp'];
+        $releasemoodle = $this->postconfigurationvalues['releasemoodle'];
+        $releaseplugin = $this->postconfigurationvalues['releaseplugin'];
+        $language = $this->postconfigurationvalues['language'];
+        $cronfrequency = $this->postconfigurationvalues['cronfrequency'];
 
-        $this->assertEquals("Invalid API key", self::$compilatioInvKey1->post_configuration($releasephp, $releasemoodle, $releaseplugin, $language, $cronfrequency));
-        $this->assertEquals("Invalid API key", self::$compilatioInvKey2->post_configuration($releasephp, $releasemoodle, $releaseplugin, $language, $cronfrequency));
+        $this->assertEquals("Invalid API key", self::$compilatioinvkey1->post_configuration($releasephp,
+            $releasemoodle, $releaseplugin, $language, $cronfrequency));
+        $this->assertEquals("Invalid API key", self::$compilatioinvkey2->post_configuration($releasephp,
+            $releasemoodle, $releaseplugin, $language, $cronfrequency));
 
-        $this->assertEquals("Authentication Required", self::$compilatioAuthReq1->post_configuration($releasephp, $releasemoodle, $releaseplugin, $language, $cronfrequency));
-        $this->assertEquals("Authentication Required", self::$compilatioAuthReq2->post_configuration($releasephp, $releasemoodle, $releaseplugin, $language, $cronfrequency));
+        $this->assertEquals("Authentication Required", self::$compilatioauthreq1->post_configuration($releasephp,
+            $releasemoodle, $releaseplugin, $language, $cronfrequency));
+        $this->assertEquals("Authentication Required", self::$compilatioauthreq2->post_configuration($releasephp,
+            $releasemoodle, $releaseplugin, $language, $cronfrequency));
     }
 
-#endregion
-
-//-------- TESTS FONCTION SEND_DOC --------
-#region Fonction send_doc
+    // TESTS FONCTION SEND_DOC...
 
     /**
      * Test fonction send_doc -> attend l'ID du document inséré
      */
-    public function test_send_doc_OK() {
+    public function test_send_doc_ok() {
 
-        $title = $this->title;
-        $filename = $this->filename;
-        $content = $this->content;
+        $title = $this->senddocvalues['title'];
+        $filename = $this->senddocvalues['filename'];
+        $content = $this->senddocvalues['content'];
 
-        $idDoc = self::$compilatio->send_doc($title, $filename, $content);
+        $iddoc = self::$compilatio->send_doc($title, $filename, $content);
 
-        $this->assertEquals('string', getType($idDoc));
-        $this->assertEquals(40, strlen($idDoc));
+        $this->assertEquals('string', gettype($iddoc));
+        $this->assertEquals(40, strlen($iddoc));
 
-        return $idDoc;
+        return $iddoc;
     }
 
     /**
      * Test fonction send_doc avec différents paramètres -> attend des erreurs selon les paramètres
-     * 
+     *
      * @param   string  $title          Document's title
      * @param   string  $filename       Filename
      * @param   string  $content        Document's content
-     * @param   string  $expected       Result expected      
-     * 
-     * @dataProvider send_doc_DataProvider
+     * @param   string  $expected       Result expected
+     *
+     * @dataProvider send_doc_dataprovider
      */
-    public function test_send_doc_INVALIDPARAMETERS($title, $filename, $content, $expected) {
+    public function test_send_doc_invalidparameters($title, $filename, $content, $expected) {
 
         $this->assertEquals($expected, self::$compilatio->send_doc($title, $filename, $content));
     }
 
     /**
-     * DataProvider de test_send_doc_INVALIDPARAMETERS
+     * DataProvider de test_send_doc_invalidparameters
      */
-    public function send_doc_DataProvider() {
+    public function send_doc_dataprovider() {
 
-        $title = $this->title;
-        $filename = $this->filename;
-        $content = $this->content;
+        $title = $this->senddocvalues['title'];
+        $filename = $this->senddocvalues['filename'];
+        $content = $this->senddocvalues['content'];
 
         return [
             'Title not defined'         => [null, $filename, $content, "Invalid parameter : 'title' is not defined"],
@@ -331,62 +373,58 @@ class api_class_test extends advanced_testcase {
     /**
      * Test fonction send_doc -> attend une erreur (clé d'API invalide ou non spécifiée (authentification requise))
      */
-    public function test_send_doc_APIKEY() {
+    public function test_send_doc_apikey() {
 
-        $title = $this->title;
-        $filename = $this->filename;
-        $content = $this->content;
+        $title = $this->senddocvalues['title'];
+        $filename = $this->senddocvalues['filename'];
+        $content = $this->senddocvalues['content'];
 
-        $this->assertEquals("Invalid API key", self::$compilatioInvKey1->send_doc($title, $filename, $content));
-        $this->assertEquals("Invalid API key", self::$compilatioInvKey2->send_doc($title, $filename, $content));
+        $this->assertEquals("Invalid API key", self::$compilatioinvkey1->send_doc($title, $filename, $content));
+        $this->assertEquals("Invalid API key", self::$compilatioinvkey2->send_doc($title, $filename, $content));
 
-        $this->assertEquals("Authentication Required", self::$compilatioAuthReq1->send_doc($title, $filename, $content));
-        $this->assertEquals("Authentication Required", self::$compilatioAuthReq2->send_doc($title, $filename, $content));
+        $this->assertEquals("Authentication Required", self::$compilatioauthreq1->send_doc($title, $filename, $content));
+        $this->assertEquals("Authentication Required", self::$compilatioauthreq2->send_doc($title, $filename, $content));
     }
 
-#endregion
-
-//-------- TESTS FONCTION START_ANALYSE --------
-#region Fonction start_analyse
+    // TESTS FONCTION START_ANALYSE...
 
     /**
      * Test fonction start_analyse -> attend true
-     * 
-     * @depends test_send_doc_OK
+     * Cette fois, on ne fait pas réellement le call API pour ne pas lancer une vraie analyse et surcharger les serveurs
+     *
+     * @param   string  $iddoc      Document's ID
+     *
+     * @depends test_send_doc_ok
      */
-    public function test_start_analyse_OK($idDoc) {
+    public function test_start_analyse_ok($iddoc) {
 
-        //Eviter de lancer l'analyse pour de vrai pour ne pas surcharger le serveur -- On va donc "mocker" le retour de la fonction
-        //$this->assertTrue(self::$compilatio->start_analyse($idDoc));
-
-        // Create a stub for the compilatioservice class
+        // Create a stub for the compilatioservice class.
         $stub = $this->createMock(compilatioservice::class);
 
-        // Configure the stub
-        $stub->method('start_analyse')
-             ->willReturn(true);
+        // Configure the stub.
+        $stub->method('start_analyse')->willReturn(true);
 
-        // Calling $stub->start_analyse() will now return true
-        $this->assertTrue($stub->start_analyse($idDoc));
+        // Calling $stub->start_analyse() will now return true.
+        $this->assertTrue($stub->start_analyse($iddoc));
     }
 
     /**
      * Test fonction start_analyse -> attend des erreurs selon les paramètres
-     * 
-     * @param   string  $idDoc          Document's ID
-     * @param   string  $expected       Result expected
-     * 
-     * @dataProvider start_analyse_DataProvider
+     *
+     * @param   string  $iddoc      Document's ID
+     * @param   string  $expected   Result expected
+     *
+     * @dataProvider start_analyse_dataprovider
      */
-    public function test_start_analyse_INVALIDPARAMETERS($idDoc, $expected) {
+    public function test_start_analyse_invalidparameters($iddoc, $expected) {
 
-        $this->assertEquals($expected, self::$compilatio->start_analyse($idDoc));
+        $this->assertEquals($expected, self::$compilatio->start_analyse($iddoc));
     }
 
     /**
-     * DataProvider de start_analyse_INVALIDPARAMETERS
+     * DataProvider de start_analyse_invalidparameters
      */
-    public function start_analyse_DataProvider() {
+    public function start_analyse_dataprovider() {
         return [
             'ID not defined'        => [null, "Invalid parameter : 'document's ID' is not defined"],
             'ID empty'              => ["", "Invalid parameter : 'document's ID' is empty"],
@@ -397,74 +435,72 @@ class api_class_test extends advanced_testcase {
 
     /**
      * Test fonction start_analyse -> attend une erreur (clé d'API invalide ou non spécifiée (authentification requise))
-     * 
-     * @depends test_send_doc_OK
+     *
+     * @param   string  $iddoc  Document's ID
+     *
+     * @depends test_send_doc_ok
      */
-    public function test_start_analyse_ERRORSAPIKEY($idDoc) {
+    public function test_start_analyse_errorsapikey($iddoc) {
 
-        $this->assertEquals("Invalid API key", self::$compilatioInvKey1->start_analyse($idDoc));
-        $this->assertEquals("Invalid API key", self::$compilatioInvKey2->start_analyse($idDoc));
+        $this->assertEquals("Invalid API key", self::$compilatioinvkey1->start_analyse($iddoc));
+        $this->assertEquals("Invalid API key", self::$compilatioinvkey2->start_analyse($iddoc));
 
-        $this->assertEquals("Authentication Required", self::$compilatioAuthReq1->start_analyse($idDoc));
-        $this->assertEquals("Authentication Required", self::$compilatioAuthReq2->start_analyse($idDoc));
+        $this->assertEquals("Authentication Required", self::$compilatioauthreq1->start_analyse($iddoc));
+        $this->assertEquals("Authentication Required", self::$compilatioauthreq2->start_analyse($iddoc));
     }
 
-#endregion
-
-//-------- TESTS FONCTION GET_DOC --------
-#region Fonction get_doc
+    // TESTS FONCTION GET_DOC...
 
     /**
      * Test fonction get_doc -> attend une classe avec différentes propriétés
-     * 
-     * @depends test_send_doc_OK
+     *
+     * @param   string  $iddoc  Document's ID
+     *
+     * @depends test_send_doc_ok
      */
-    public function test_get_doc_OK($idDoc) {
+    public function test_get_doc_ok($iddoc) {
 
-        // On vérifie différentes propriétés pour un document qui vient d'être uploadé pour les tests
-        $docObject = self::$compilatio->get_doc($idDoc);
-        $doc = $docObject->documentProperties;
+        // On vérifie différentes propriétés pour un document qui vient d'être uploadé pour les tests.
+        $docobject = self::$compilatio->get_doc($iddoc);
+        $doc = $docobject->documentProperties;
 
-        $this->assertEquals('object', getType($doc));
-        $this->assertEquals($idDoc, $doc->idDocument);
+        $this->assertEquals('object', gettype($doc));
+        $this->assertEquals($iddoc, $doc->idDocument);
         $this->assertEmpty($doc->title);
-        $this->assertEquals($this->filename, $doc->filename);
-        $this->assertEquals(strlen($this->content), $doc->textLength);
+        $this->assertEquals($this->senddocvalues['filename'], $doc->filename);
+        $this->assertEquals(strlen($this->senddocvalues['content']), $doc->textLength);
         $this->assertEquals(11, $doc->wordCount);
-        $this->assertEquals(str_word_count($this->content), $doc->wordCount);
+        $this->assertEquals(str_word_count($this->senddocvalues['content']), $doc->wordCount);
 
-        // On vérifie différentes propriétés pour un document déjà en base
-        $docObjectBase = self::$compilatio->get_doc(self::ID_DOC);
-        $docBase = $docObjectBase->documentProperties;
-        $docStatusBase = $docObjectBase->documentStatus;
+        // On vérifie différentes propriétés pour un document déjà en base.
+        $docobjectbase = self::$compilatio->get_doc(self::ID_DOC);
+        $docbase = $docobjectbase->documentProperties;
+        $docstatusbase = $docobjectbase->documentStatus;
 
-        $this->assertEquals('object', getType($docBase));
-        $this->assertEquals(self::ID_DOC, $docBase->idDocument);
-        $this->assertEmpty($docBase->title);
-        $this->assertEquals("ANALYSE_COMPLETE", $docStatusBase->status);
-        $this->assertEquals("100", $docStatusBase->progression);
-
-        var_dump($docObjectBase);
-
+        $this->assertEquals('object', gettype($docbase));
+        $this->assertEquals(self::ID_DOC, $docbase->idDocument);
+        $this->assertEmpty($docbase->title);
+        $this->assertEquals("ANALYSE_COMPLETE", $docstatusbase->status);
+        $this->assertEquals("100", $docstatusbase->progression);
     }
 
     /**
      * Test fonction get_doc -> attend des erreurs selon les paramètres
-     * 
-     * @param   string  $idDoc          Document's ID
-     * @param   string  $expected       Result expected
-     * 
-     * @dataProvider get_doc_DataProvider
+     *
+     * @param   string  $iddoc      Document's ID
+     * @param   string  $expected   Result expected
+     *
+     * @dataProvider get_doc_dataprovider
      */
-    public function test_get_doc_INVALIDPARAMETERS($idDoc, $expected) {
+    public function test_get_doc_invalidparameters($iddoc, $expected) {
 
-        $this->assertEquals($expected, self::$compilatio->get_doc($idDoc));
+        $this->assertEquals($expected, self::$compilatio->get_doc($iddoc));
     }
 
     /**
-     * DataProvider de test_get_doc_INVALIDPARAMETERS
+     * DataProvider de test_get_doc_invalidparameters
      */
-    public function get_doc_DataProvider() {
+    public function get_doc_dataprovider() {
         return [
             'ID not defined'        => [null, "Invalid parameter : 'document's ID' is not defined"],
             'ID empty'              => ["", "Invalid parameter : 'document's ID' is empty"],
@@ -475,52 +511,51 @@ class api_class_test extends advanced_testcase {
 
     /**
      * Test fonction get_doc -> attend une erreur (clé d'API invalide ou non spécifiée (authentification requise))
-     * 
-     * @depends test_send_doc_OK
+     *
+     * @param   string  $iddoc  Document's ID
+     *
+     * @depends test_send_doc_ok
      */
-    public function test_get_doc_ERRORSAPIKEY($idDoc) {
+    public function test_get_doc_errorsapikey($iddoc) {
 
-        $this->assertEquals("Invalid API key", self::$compilatioInvKey1->get_doc($idDoc));
-        $this->assertEquals("Invalid API key", self::$compilatioInvKey2->get_doc($idDoc));
+        $this->assertEquals("Invalid API key", self::$compilatioinvkey1->get_doc($iddoc));
+        $this->assertEquals("Invalid API key", self::$compilatioinvkey2->get_doc($iddoc));
 
-        $this->assertEquals("Authentication Required", self::$compilatioAuthReq1->get_doc($idDoc));
-        $this->assertEquals("Authentication Required", self::$compilatioAuthReq2->get_doc($idDoc));
+        $this->assertEquals("Authentication Required", self::$compilatioauthreq1->get_doc($iddoc));
+        $this->assertEquals("Authentication Required", self::$compilatioauthreq2->get_doc($iddoc));
     }
 
-#endregion
-
-//-------- TESTS FONCTION GET_REPORT_URL --------
-#region Fonction get_report_url
+    // TESTS FONCTION GET_REPORT_URL...
 
     /**
      * Test fonction get_report_url -> attend l'URL de l'analyse
      */
-    public function test_get_report_url_OK() {
+    public function test_get_report_url_ok() {
 
         $url = self::$compilatio->get_report_url(self::ID_DOC);
 
-        $this->assertEquals('string', getType($url));
+        $this->assertEquals('string', gettype($url));
         $this->assertStringStartsWith('https://', $url);
         $this->assertEquals(self::DOC_REPORT_URL, $url);
     }
 
     /**
      * Test fonction get_report_url -> attend des erreurs selon les paramètres
-     * 
-     * @param   string  $idDoc          Document's ID
-     * @param   string  $expected       Result expected
-     * 
-     * @dataProvider get_report_url_DataProvider
+     *
+     * @param   string  $iddoc      Document's ID
+     * @param   string  $expected   Result expected
+     *
+     * @dataProvider get_report_url_dataprovider
      */
-    public function test_get_report_url_INVALIDPARAMETERS($idDoc, $expected) {
+    public function test_get_report_url_invalidparameters($iddoc, $expected) {
 
-        $this->assertEquals($expected, self::$compilatio->get_report_url($idDoc));
+        $this->assertEquals($expected, self::$compilatio->get_report_url($iddoc));
     }
 
     /**
-     * DataProvider de test_get_report_url_INVALIDPARAMETERS
+     * DataProvider de test_get_report_url_invalidparameters
      */
-    public function get_report_url_DataProvider() {
+    public function get_report_url_dataprovider() {
         return [
             'ID not defined'        => [null, "Invalid parameter : 'document's ID' is not defined"],
             'ID empty'              => ["", "Invalid parameter : 'document's ID' is empty"],
@@ -530,100 +565,105 @@ class api_class_test extends advanced_testcase {
     }
 
     /**
-     * Test fonction get_report_url -> attend une erreur (par exemple le document n'a pas fini d'être / n'a pas été analysé)
-     * 
-     * @depends test_send_doc_OK
+     * Test fonction get_report_url -> attend une erreur
+     * (par exemple le document n'a pas fini d'être / n'a pas été analysé)
+     *
+     * @param   string  $iddoc  Document's ID
+     *
+     * @depends test_send_doc_ok
      */
-    public function test_get_report_url_BADREQUEST($idDoc) {
+    public function test_get_report_url_badrequest($iddoc) {
 
-        $this->assertEquals("Bad Request", self::$compilatio->get_report_url($idDoc));
+        $this->assertEquals("Bad Request", self::$compilatio->get_report_url($iddoc));
     }
 
     /**
-     * Test fonction get_doc -> attend une erreur (clé d'API invalide ou non spécifiée (authentification requise))
+     * Test fonction get_doc -> attend une erreur
+     * (clé d'API invalide ou non spécifiée (authentification requise))
      */
-    public function test_get_report_url_ERRORSAPIKEY() {
+    public function test_get_report_url_errorsapikey() {
 
-        $this->assertEquals("Invalid API key", self::$compilatioInvKey1->get_report_url(self::ID_DOC));
-        $this->assertEquals("Invalid API key", self::$compilatioInvKey2->get_report_url(self::ID_DOC));
+        $this->assertEquals("Invalid API key", self::$compilatioinvkey1->get_report_url(self::ID_DOC));
+        $this->assertEquals("Invalid API key", self::$compilatioinvkey2->get_report_url(self::ID_DOC));
 
-        $this->assertEquals("Authentication Required", self::$compilatioAuthReq1->get_report_url(self::ID_DOC));
-        $this->assertEquals("Authentication Required", self::$compilatioAuthReq2->get_report_url(self::ID_DOC));
+        $this->assertEquals("Authentication Required", self::$compilatioauthreq1->get_report_url(self::ID_DOC));
+        $this->assertEquals("Authentication Required", self::$compilatioauthreq2->get_report_url(self::ID_DOC));
     }
 
-#endregion
-
-//-------- TESTS FONCTION GET_INDEXING_STATE & SET_INDEXING_STATE --------
-#region Fonctions get_indexing_state & set_indexing_state -> OK
+    // TESTS FONCTION GET_INDEXING_STATE & SET_INDEXING_STATE...
 
     /**
      * Test fonction set_indexing_state -> attend  true
-     * 
-     * @depends test_send_doc_OK
+     *
+     * @param   string  $iddoc  Document's ID
+     *
+     * @depends test_send_doc_ok
      */
-    public function test_set_indexing_state_TRUEOK($idDoc) {
+    public function test_set_indexing_state_trueok($iddoc) {
 
-        $this->assertTrue(self::$compilatio->set_indexing_state($idDoc, true));
-        sleep(5); //Pause pour laisser le temps au paramètre d'être mis à jour
+        $this->assertTrue(self::$compilatio->set_indexing_state($iddoc, true));
+        sleep(5); // Pause pour laisser le temps au paramètre d'être mis à jour.
     }
-    
+
     /**
      * Test fonction get_indexing_state -> attend true
-     * 
-     * @depends test_send_doc_OK
-     * @depends test_set_indexing_state_TRUEOK
+     *
+     * @param   string  $iddoc  Document's ID
+     *
+     * @depends test_send_doc_ok
+     * @depends test_set_indexing_state_trueok
      */
-    public function test_get_indexing_state_TRUEOK($idDoc) {
+    public function test_get_indexing_state_trueok($iddoc) {
 
-        $this->assertTrue(self::$compilatio->get_indexing_state($idDoc));
+        $this->assertTrue(self::$compilatio->get_indexing_state($iddoc));
     }
 
     /**
      * Test fonction set_indexing_state -> attend false
-     * 
-     * @depends test_send_doc_OK
+     *
+     * @param   string  $iddoc  Document's ID
+     *
+     * @depends test_send_doc_ok
      */
-    public function test_set_indexing_state_FALSEOK($idDoc) {
+    public function test_set_indexing_state_falseok($iddoc) {
 
-        $this->assertTrue(self::$compilatio->set_indexing_state($idDoc, false));
-        sleep(5); //Pause pour laisser le temps au paramètre d'être mis à jour
+        $this->assertTrue(self::$compilatio->set_indexing_state($iddoc, false));
+        sleep(5); // Pause pour laisser le temps au paramètre d'être mis à jour.
     }
 
     /**
      * Test fonction get_indexing_state -> attend false
-     * 
-     * @depends test_send_doc_OK
-     * @depends test_set_indexing_state_FALSEOK
+     *
+     * @param   string  $iddoc  Document's ID
+     *
+     * @depends test_send_doc_ok
+     * @depends test_set_indexing_state_falseok
      */
-    public function test_get_indexing_state_FALSEOK($idDoc) {
+    public function test_get_indexing_state_falseok($iddoc) {
 
-        $this->assertFalse(self::$compilatio->get_indexing_state($idDoc));
+        $this->assertFalse(self::$compilatio->get_indexing_state($iddoc));
     }
-
-#endregion
-
-#region Fonctions get_indexing_state & set_indexing_state -> errors
 
     /**
      * Test fonction set_indexing_state -> attend des erreurs selon les paramètres
-     * 
-     * @param   string  $idDoc          Document's ID
-     * @param   bool    $indexed        Indexing state
-     * @param   string  $expected       Result expected
-     * 
-     * @dataProvider set_indexing_state_DataProvider
+     *
+     * @param   string  $iddoc      Document's ID
+     * @param   bool    $indexed    Indexing state
+     * @param   string  $expected   Result expected
+     *
+     * @dataProvider set_indexing_state_dataprovider
      */
-    public function test_set_indexing_state_INVALIDPARAMETERS($idDoc, $indexed, $expected) {
+    public function test_set_indexing_state_invalidparameters($iddoc, $indexed, $expected) {
 
-        $this->assertEquals($expected, self::$compilatio->set_indexing_state($idDoc, $indexed));
+        $this->assertEquals($expected, self::$compilatio->set_indexing_state($iddoc, $indexed));
     }
 
     /**
-     * DataProvider de test_set_indexing_state_INVALIDPARAMETERS
+     * DataProvider de test_set_indexing_state_invalidparameters
      */
-    public function set_indexing_state_DataProvider() {
+    public function set_indexing_state_dataprovider() {
 
-        $idDoc = self::ID_DOC;
+        $iddoc = self::ID_DOC;
         $indexed = true;
 
         return [
@@ -632,28 +672,28 @@ class api_class_test extends advanced_testcase {
             'ID not a string'           => [42, $indexed, "Invalid parameter : 'document's ID' is not a string"],
             'Document not found'        => ["abcdef", $indexed, "Not Found"],
 
-            'Indexing state not bool, int'      => [$idDoc, 42, "Invalid parameter : indexing state is not a boolean"],
-            'Indexing state not bool, string'   => [$idDoc, "abcdef", "Invalid parameter : indexing state is not a boolean"]
+            'Indexing state not bool, int'      => [$iddoc, 42, "Invalid parameter : indexing state is not a boolean"],
+            'Indexing state not bool, string'   => [$iddoc, "abcdef", "Invalid parameter : indexing state is not a boolean"]
         ];
     }
 
     /**
      * Test fonction get_indexing_state -> attend des erreurs selon les paramètres
-     * 
-     * @param   string  $idDoc          Document's ID
-     * @param   string  $expected       Result expected
-     * 
-     * @dataProvider get_indexing_state_DataProvider
+     *
+     * @param   string  $iddoc      Document's ID
+     * @param   string  $expected   Result expected
+     *
+     * @dataProvider get_indexing_state_dataprovider
      */
-    public function test_get_indexing_state_INVALIDPARAMETERS($idDoc, $expected) {
+    public function test_get_indexing_state_invalidparameters($iddoc, $expected) {
 
-        $this->assertEquals($expected, self::$compilatio->get_indexing_state($idDoc));
+        $this->assertEquals($expected, self::$compilatio->get_indexing_state($iddoc));
     }
 
     /**
-     * DataProvider de test_get_indexing_state_INVALIDPARAMETERS
+     * DataProvider de test_get_indexing_state_invalidparameters
      */
-    public function get_indexing_state_DataProvider() {
+    public function get_indexing_state_dataprovider() {
 
         return [
             'ID not defined'                => [null, "Invalid parameter : 'document's ID' is not defined"],
@@ -664,47 +704,47 @@ class api_class_test extends advanced_testcase {
     }
 
     /**
-     * Test fonction get & set_indexing_state -> attend une erreur (clé d'API invalide ou non spécifiée (authentification requise))
-     * 
-     * @depends test_send_doc_OK
+     * Test fonction get & set_indexing_state -> attend une erreur
+     * (clé d'API invalide ou non spécifiée (authentification requise))
+     *
+     * @param   string  $iddoc  Document's ID
+     *
+     * @depends test_send_doc_ok
      */
-    public function test_get_set_indexing_state_ERRORSAPIKEY($idDoc) {
+    public function test_get_set_indexing_state_errorsapikey($iddoc) {
 
-        $this->assertEquals("Invalid API key", self::$compilatioInvKey1->get_indexing_state($idDoc));
-        $this->assertEquals("Invalid API key", self::$compilatioInvKey2->get_indexing_state($idDoc));
+        $this->assertEquals("Invalid API key", self::$compilatioinvkey1->get_indexing_state($iddoc));
+        $this->assertEquals("Invalid API key", self::$compilatioinvkey2->get_indexing_state($iddoc));
 
-        $this->assertEquals("Authentication Required", self::$compilatioAuthReq1->get_indexing_state($idDoc));
-        $this->assertEquals("Authentication Required", self::$compilatioAuthReq2->get_indexing_state($idDoc));
+        $this->assertEquals("Authentication Required", self::$compilatioauthreq1->get_indexing_state($iddoc));
+        $this->assertEquals("Authentication Required", self::$compilatioauthreq2->get_indexing_state($iddoc));
 
-        $this->assertEquals("Invalid API key", self::$compilatioInvKey1->set_indexing_state($idDoc, true));
-        $this->assertEquals("Invalid API key", self::$compilatioInvKey2->set_indexing_state($idDoc, true));
+        $this->assertEquals("Invalid API key", self::$compilatioinvkey1->set_indexing_state($iddoc, true));
+        $this->assertEquals("Invalid API key", self::$compilatioinvkey2->set_indexing_state($iddoc, true));
 
-        $this->assertEquals("Authentication Required", self::$compilatioAuthReq1->set_indexing_state($idDoc, true));
-        $this->assertEquals("Authentication Required", self::$compilatioAuthReq2->set_indexing_state($idDoc, true));
+        $this->assertEquals("Authentication Required", self::$compilatioauthreq1->set_indexing_state($iddoc, true));
+        $this->assertEquals("Authentication Required", self::$compilatioauthreq2->set_indexing_state($iddoc, true));
     }
 
-#endregion
-
-//-------- TESTS FONCTION DEL_DOC -------
-#region Fonction del_doc
+    // TESTS FONCTION DEL_DOC...
 
     /**
      * Test fonction del_doc -> attend des erreurs selon les paramètres
-     * 
-     * @param   string  $idDoc          Document's ID
-     * @param   string  $expected       Result expected
-     * 
-     * @dataProvider del_doc_DataProvider
+     *
+     * @param   string  $iddoc      Document's ID
+     * @param   string  $expected   Result expected
+     *
+     * @dataProvider del_doc_dataprovider
      */
-    public function test_del_doc_INVALIDPARAMETERS($idDoc, $expected) {
+    public function test_del_doc_invalidparameters($iddoc, $expected) {
 
-        $this->assertEquals($expected, self::$compilatio->del_doc($idDoc));
+        $this->assertEquals($expected, self::$compilatio->del_doc($iddoc));
     }
 
     /**
-     * DataProvider de test_del_doc_INVALIDPARAMETERS
+     * DataProvider de test_del_doc_invalidparameters
      */
-    public function del_doc_DataProvider() {
+    public function del_doc_dataprovider() {
         return [
             'ID not defined'        => [null, "Invalid parameter : 'document's ID' is not defined"],
             'ID empty'              => ["", "Invalid parameter : 'document's ID' is empty"],
@@ -714,113 +754,58 @@ class api_class_test extends advanced_testcase {
     }
 
     /**
-     * Test fonction del_doc -> attend une erreur (clé d'API invalide ou non spécifiée (authentification requise))
-     * 
-     * @depends test_send_doc_OK
+     * Test fonction del_doc -> attend une erreur
+     * (clé d'API invalide ou non spécifiée (authentification requise))
+     *
+     * @param   string  $iddoc  Document's ID
+     *
+     * @depends test_send_doc_ok
      */
-    public function test_del_doc_ERRORSAPIKEY($idDoc) {
+    public function test_del_doc_errorsapikey($iddoc) {
 
-        $this->assertEquals("Invalid API key", self::$compilatioInvKey1->del_doc($idDoc));
-        $this->assertEquals("Invalid API key", self::$compilatioInvKey2->del_doc($idDoc));
+        $this->assertEquals("Invalid API key", self::$compilatioinvkey1->del_doc($iddoc));
+        $this->assertEquals("Invalid API key", self::$compilatioinvkey2->del_doc($iddoc));
 
-        $this->assertEquals("Authentication Required", self::$compilatioAuthReq1->del_doc($idDoc));
-        $this->assertEquals("Authentication Required", self::$compilatioAuthReq2->del_doc($idDoc));
+        $this->assertEquals("Authentication Required", self::$compilatioauthreq1->del_doc($iddoc));
+        $this->assertEquals("Authentication Required", self::$compilatioauthreq2->del_doc($iddoc));
     }
 
     /**
      * Test fonction del_doc -> attend une erreur (document déjà indexé)
-     * 
-     * @depends test_send_doc_OK
+     *
+     * @param   string  $iddoc  Document's ID
+     *
+     * @depends test_send_doc_ok
      */
-    public function test_del_doc_DOCINDEXED($idDoc) {
+    public function test_del_doc_docindexed($iddoc) {
 
-        self::$compilatio->set_indexing_state($idDoc, true);
-        sleep(5); //Pause pour laisser le temps au paramètre d'être mis à jour
+        self::$compilatio->set_indexing_state($iddoc, true);
+        sleep(5); // Pause pour laisser le temps au paramètre d'être mis à jour.
 
-        $this->assertEquals("You can't remove an indexed document, please remove it from your references database before", 
-                            self::$compilatio->del_doc($idDoc));
+        $this->assertEquals("You can't remove an indexed document, please remove it from your references database before",
+            self::$compilatio->del_doc($iddoc));
     }
 
     /**
      * Test fonction del_doc -> attend true
-     * 
-     * @depends test_send_doc_OK
+     *
+     * @param   string  $iddoc  Document's ID
+     *
+     * @depends test_send_doc_ok
      */
-    public function test_del_doc_OK($idDoc) {
+    public function test_del_doc_ok($iddoc) {
 
-        self::$compilatio->set_indexing_state($idDoc, false);
-        sleep(5); //Pause pour laisser le temps au paramètre d'être mis à jour
+        self::$compilatio->set_indexing_state($iddoc, false);
+        sleep(5); // Pause pour laisser le temps au paramètre d'être mis à jour.
 
-        $this->assertTrue(self::$compilatio->del_doc($idDoc));
+        $this->assertTrue(self::$compilatio->del_doc($iddoc));
     }
-
-#endregion
-
 }
 
-/* RECAPITULATIF DES FONCTIONS A TESTER
-
-    get_technical_news          -> OK
-    get_allowed_file_max_size   -> OK
-    get_allowed_file_types      -> OK
-    post_configuration          -> OK
-    send_doc                    -> OK
-    start_analyse               -> OK
-    get_doc                     -> OK
-    get_report_url              -> OK
-    set_indexing_state          -> OK
-    get_indexing_state          -> OK
-    del_doc                     -> OK
-
-    get_quotas                  -> PAS (vraiment) TESTABLE (méthode pas codée dans l'API REST)
-    get_account_expiration_date -> PAS TESTABLE (méthode pas codée dans l'API REST)
-
-    Commande pour exécuter tous les tests unitaires (se situer dans moodle36/www/moodle36) :
+/*
+    Commande pour exécuter tous les tests unitaires :
         vendor/bin/phpunit plagiarism/compilatio/tests/api_class_test.php
-    
-    Commande pour exécuter un seul test unitaire (se situer dans moodle36/www/moodle36) :
-        vendor/bin/phpunit --filter test_send_doc_OK  plagiarism/compilatio/tests/api_class_test.php
 
-*/
-
-/* APPELS D'API AVEC CURL EN LIGNE DE COMMANDE
-
-get_technical_news (ok)
-    curl -i -H "X-Auth-Token: XXXX-XXXX" -H "Accept: application/json" -H "Content-Type: application/json" -X GET https://beta.compilatio.net/api/service-info/list?limit=5
-
-get_allowed_file_max_size (pas testable)
-
-get_allowed_file_types (ok)
-    curl -i -H "X-Auth-Token: XXXX-XXXX" -H "Accept: application/json" -H "Content-Type: application/json" -X GET https://beta.compilatio.net/public_api/file/allowed-extensions
-
-post_configuration (ok)
-    curl -i -H "X-Auth-Token: XXXX-XXXX" -H "Accept: application/json" -H "Content-Type: application/json" --data '{"php_version":"7.0.33-0ubuntu0.16.04.3","moodle_version":"3.6 (Build: 20181203)","compilatio_plugin_version":"2019030500","language":"fr","cron_frequency":"1"}' -X POST https://beta.compilatio.net/api/moodle-configuration/add
-
-send_doc (ok)
-    curl -i -H "X-Auth-Token: XXXX-XXXX" -F file=@newtest.txt -F title=newtest -F origin=api -X POST https://beta.compilatio.net/api/document/
-    curl -i -H "X-Auth-Token: XXXX-XXXX" -F "file=@newtest.txt;title=newtest;origin=api" -X POST https://beta.compilatio.net/api/document/
-
-start_analyse (ok)
-    curl -i -H "X-Auth-Token: XXXX-XXXX" -H "Accept: application/json" -H "Content-Type: application/json" --data '{"doc_id":"XXXX-XXXX","recipe_name":"anasim"}' -X POST https://beta.compilatio.net/api/analysis/
-
-get_doc (ok)
-    curl -i -H "X-Auth-Token: XXXX-XXXX" -H "Accept: application/json" -H "Content-Type: application/json" -X GET https://beta.compilatio.net/api/document/XXXX-XXXX
-
-get_report_url (ok)
-    curl -i -H "X-Auth-Token: XXXX-XXXX" -H "Accept: application/json" -H "Content-Type: application/json" -X GET https://beta.compilatio.net/api/document/XXXX-XXXX/report-url
-
-del_doc (ok)
-    curl -i -H "X-Auth-Token: XXXX-XXXX" -H "Accept: application/json" -H "Content-Type: application/json" -X DELETE https://beta.compilatio.net/api/document/XXXX-XXXX
-
-set_indexing_state (ok)
-    curl -i -H "X-Auth-Token: XXXX-XXXX" -H "Accept: application/json" -H "Content-Type: application/json" --data '{"indexed": "true"}' -X PATCH https://beta.compilatio.net/api/document/XXXX-XXXX
-
-get_indexing_state (même commande que pour get_doc)
-    curl -i -H "X-Auth-Token: XXXX-XXXX" -H "Accept: application/json" -H "Content-Type: application/json" -X GET https://beta.compilatio.net/api/document/XXXX-XXXX
-
-get_quotas (pas testable)
-
-get_account_expiration_date (pas testable)
-    curl -i -H "X-Auth-Token: XXXX-XXXX" -H "Accept: application/json" -H "Content-Type: application/json" -X GET https://beta.compilatio.net/api/subscription/api-key
-
+    Commande pour exécuter un seul test unitaire :
+        vendor/bin/phpunit --filter test_send_doc_ok  plagiarism/compilatio/tests/api_class_test.php
 */

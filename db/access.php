@@ -31,9 +31,9 @@ $capabilities = array(
     'plagiarism/compilatio:enable' => array(
         'captype' => 'write',
         'contextlevel' => CONTEXT_COURSE,
-         'legacy' => array(
-         'editingteacher' => CAP_ALLOW,
-         'manager' => CAP_ALLOW
+        'legacy' => array(
+            'editingteacher' => CAP_ALLOW,
+            'manager' => CAP_ALLOW
         )
     ),
     'plagiarism/compilatio:triggeranalysis' => array(
@@ -47,19 +47,19 @@ $capabilities = array(
     'plagiarism/compilatio:viewreport' => array(
         'captype' => 'write',
         'contextlevel' => CONTEXT_COURSE,
-         'legacy' => array(
-         'editingteacher' => CAP_ALLOW,
-         'teacher' => CAP_ALLOW,
-         'manager' => CAP_ALLOW
+        'legacy' => array(
+            'editingteacher' => CAP_ALLOW,
+            'teacher' => CAP_ALLOW,
+            'manager' => CAP_ALLOW
         )
     ),
     'plagiarism/compilatio:resetfile' => array(
         'captype' => 'write',
         'contextlevel' => CONTEXT_COURSE,
-         'legacy' => array(
-         'editingteacher' => CAP_ALLOW,
-         'teacher' => CAP_ALLOW,
-         'manager' => CAP_ALLOW
+        'legacy' => array(
+            'editingteacher' => CAP_ALLOW,
+            'teacher' => CAP_ALLOW,
+            'manager' => CAP_ALLOW
         )
     ),
 );

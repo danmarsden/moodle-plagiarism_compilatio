@@ -77,7 +77,7 @@ class plagiarism_plugin_compilatio extends plagiarism_plugin
         // Check if compilatio enabled.
         if (isset($plagiarismsettings['compilatio_use']) && $plagiarismsettings['compilatio_use']) {
             // Now check to make sure required settings are set!.
-            if (empty($plagiarismsettings['compilatio_password'])) {
+            if (empty($plagiarismsettings['compilatio_api'])) {
                 error("Compilatio API URL not set!");
             }
             return $plagiarismsettings;
@@ -120,6 +120,16 @@ class plagiarism_plugin_compilatio extends plagiarism_plugin
             return '';
         }
 
+        // If the user has permission to see result of all items in this course module.
+        $modulecontext = context_module::instance($linkarray['cmid']);
+        $teacher = has_capability('plagiarism/compilatio:viewreport', $modulecontext);
+
+        // Get Compilatio's module configuration.
+        $plugincm = compilatio_cm_use($linkarray['cmid']);
+        if ($plugincm['compilatio_show_student_score'] == '0' && !$teacher) {
+            return '';
+        }
+
         global $DB, $CFG, $PAGE;
         $output = '';
 
@@ -128,10 +138,6 @@ class plagiarism_plugin_compilatio extends plagiarism_plugin
         $domid++;
 
         $cm = get_coursemodule_from_id(null, $linkarray['cmid']);
-        $modulecontext = context_module::instance($linkarray['cmid']);
-
-        // If the user has permission to see result of all items in this course module.
-        $teacher = has_capability('plagiarism/compilatio:viewreport', $modulecontext);
         $indexingstate = null;
 
         // Get submiter userid.
@@ -404,6 +410,7 @@ class plagiarism_plugin_compilatio extends plagiarism_plugin
         // If report is closed, this can make the report available to more users.
         $assignclosed = false;
         $time = time();
+
         if ($cm->completionexpected != 0 && $time > $cm->completionexpected) {
             $assignclosed = true;
         }
@@ -428,7 +435,8 @@ class plagiarism_plugin_compilatio extends plagiarism_plugin
         }
         // End of rights checking.
 
-        if (!$viewscore && !$viewreport && $selfreport) {
+        // Anyone can see the Compilatio <div> only if they are allowed... We don't need to check anything else.
+        if (!$viewscore) {
             // User is not permitted to see any details.
             return false;
         }
@@ -1761,9 +1769,7 @@ function compilatio_send_file_to_compilatio(&$plagiarismfile, $plagiarismsetting
     $name = format_string($module->name) . "_" . $plagiarismfile->cm;
     $filecontents = (!empty($file->filepath)) ? file_get_contents($file->filepath) : $file->get_content();
     $idcompi = $compilatio->send_doc($name, // Title.
-        //$name, // Description.
         $filename, // File_name.
-        //$mimetype, // Mime data.
         $filecontents); // Doc content.
 
     if (compilatio_valid_md5($idcompi)) {
@@ -1872,7 +1878,7 @@ function compilatio_startanalyse($plagiarismfile, $plagiarismsettings = '') {
         $plagiarismfile->statuscode = COMPILATIO_STATUSCODE_IN_QUEUE;
         $DB->update_record('plagiarism_compilatio_files', $plagiarismfile);
     } else {
-    echo $OUTPUT->notification(get_string('failedanalysis', 'plagiarism_compilatio').$analyse);
+        echo $OUTPUT->notification(get_string('failedanalysis', 'plagiarism_compilatio').$analyse);
         return $analyse;
     }
 
@@ -1887,7 +1893,8 @@ function compilatio_startanalyse($plagiarismfile, $plagiarismsettings = '') {
  */
 function compilatio_valid_md5($hash) {
 
-    // La nouvelle API REST renvoie des ID longs de 40 caractères, l'ancienne devait en renvoyer des longs de 32, d'où les deux cas de figure
+    // La nouvelle API REST renvoie des ID longs de 40 caractères...
+    // L'ancienne devait en renvoyer des longs de 32, d'où les deux cas de figure...
     if (preg_match('/^[a-f0-9]{32}$/', $hash) || preg_match('/^[a-f0-9]{40}$/', $hash)) {
         return true;
     } else {
@@ -2759,10 +2766,6 @@ function event_handler($eventdata, $hasfile = true, $hascontent = true) {
     if (!compilatio_enabled($cmid)) {
         return;
     }
-/*
-    var_dump($eventdata);
-    exit;
-*/
 
     $fh = fopen("/home/sites/moodle36/moodledata/temp/templog.txt", 'a');
     fwrite($fh, var_export($eventdata, true));
