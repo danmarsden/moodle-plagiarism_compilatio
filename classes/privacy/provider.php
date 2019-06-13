@@ -22,9 +22,9 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
 namespace plagiarism_compilatio\privacy;
+
+defined('MOODLE_INTERNAL') || die();
 
 if (interface_exists('\core_plagiarism\privacy\plagiarism_user_provider')) {
     interface user_provider extends \core_plagiarism\privacy\plagiarism_user_provider{
